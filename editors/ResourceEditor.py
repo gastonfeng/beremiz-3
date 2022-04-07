@@ -24,18 +24,18 @@
 
 
 from __future__ import absolute_import
-import wx
-import wx.lib.buttons
-import wx.grid
-from six.moves import xrange
 
-from graphics.GraphicCommons import REFRESH_HIGHLIGHT_PERIOD, ERROR_HIGHLIGHT
+import wx
+import wx.grid
+import wx.lib.buttons
+
 from controls import CustomGrid, CustomTable, DurationCellEditor
 from dialogs.DurationEditorDialog import IEC_TIME_MODEL
 from editors.EditorPanel import EditorPanel
+from graphics.GraphicCommons import REFRESH_HIGHLIGHT_PERIOD, ERROR_HIGHLIGHT
+from plcopen.structures import TestIdentifier, IEC_KEYWORDS
 from util.BitmapLibrary import GetBitmap
 from util.TranslationCatalogs import NoTranslate
-from plcopen.structures import TestIdentifier, IEC_KEYWORDS
 
 
 # -------------------------------------------------------------------------------

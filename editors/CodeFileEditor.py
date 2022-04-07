@@ -25,25 +25,23 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 import re
 from builtins import str as text
 
 import wx
 import wx.grid
-import wx.stc as stc
 import wx.lib.buttons
-from six.moves import xrange
+import wx.stc as stc
 
-
-from plcopen.plcopen import TestTextElement
-from plcopen.structures import TestIdentifier, IEC_KEYWORDS, DefaultType
 from controls import CustomGrid, CustomTable
 from controls.CustomStyledTextCtrl import CustomStyledTextCtrl, faces, GetCursorPos, NAVIGATION_KEYS
 from editors.ConfTreeNodeEditor import ConfTreeNodeEditor
+from graphics.GraphicCommons import ERROR_HIGHLIGHT, SEARCH_RESULT_HIGHLIGHT, REFRESH_HIGHLIGHT_PERIOD
+from plcopen.plcopen import TestTextElement
+from plcopen.structures import TestIdentifier, IEC_KEYWORDS, DefaultType
 from util.BitmapLibrary import GetBitmap
 from util.TranslationCatalogs import NoTranslate
-from graphics.GraphicCommons import ERROR_HIGHLIGHT, SEARCH_RESULT_HIGHLIGHT, REFRESH_HIGHLIGHT_PERIOD
-
 
 [STC_CODE_ERROR, STC_CODE_SEARCH_RESULT,
  STC_CODE_SECTION] = range(15, 18)
@@ -285,7 +283,7 @@ class CodeEditor(CustomStyledTextCtrl):
     def RefreshSectionStyling(self):
         self.Colourise(0, -1)
 
-        for line in xrange(self.GetLineCount()):
+        for line in range(self.GetLineCount()):
             self.SetLineState(line, 0)
 
         doc_end_pos = self.GetLength()

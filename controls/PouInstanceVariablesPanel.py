@@ -25,6 +25,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 from collections import namedtuple
 
 import wx
@@ -32,9 +33,7 @@ import wx.lib.agw.customtreectrl as CT
 import wx.lib.buttons
 
 from plcopen.types_enums import *
-
 from util.BitmapLibrary import GetBitmap
-
 
 # Customize CustomTreeItem for adding icon on item right
 CT.GenericTreeItem._rightimages = []
@@ -132,7 +131,7 @@ class PouInstanceVariablesPanel(wx.Panel):
 
         self.ParentButton = wx.lib.buttons.GenBitmapButton(
             self, bitmap=GetBitmap("top"), size=wx.Size(28, 28), style=wx.NO_BORDER)
-        self.ParentButton.SetToolTipString(_("Parent instance"))
+        self.ParentButton.SetToolTip(_("Parent instance"))
         self.Bind(wx.EVT_BUTTON, self.OnParentButtonClick,
                   self.ParentButton)
 
@@ -142,7 +141,7 @@ class PouInstanceVariablesPanel(wx.Panel):
 
         self.DebugButton = wx.lib.buttons.GenBitmapButton(
             self, bitmap=GetBitmap("debug_instance"), size=wx.Size(28, 28), style=wx.NO_BORDER)
-        self.DebugButton.SetToolTipString(_("Debug instance"))
+        self.DebugButton.SetToolTip(_("Debug instance"))
         self.Bind(wx.EVT_BUTTON, self.OnDebugButtonClick,
                   self.DebugButton)
 
@@ -175,15 +174,15 @@ class PouInstanceVariablesPanel(wx.Panel):
                 self.DebugButtonCallback, self.DebugButtonDClickCallback)}
 
         buttons_sizer = wx.FlexGridSizer(cols=3, hgap=0, rows=1, vgap=0)
-        buttons_sizer.AddWindow(self.ParentButton)
-        buttons_sizer.AddWindow(self.InstanceChoice, flag=wx.GROW)
-        buttons_sizer.AddWindow(self.DebugButton)
+        buttons_sizer.Add(self.ParentButton)
+        buttons_sizer.Add(self.InstanceChoice, flag=wx.GROW)
+        buttons_sizer.Add(self.DebugButton)
         buttons_sizer.AddGrowableCol(1)
         buttons_sizer.AddGrowableRow(0)
 
         main_sizer = wx.FlexGridSizer(cols=1, hgap=0, rows=2, vgap=0)
-        main_sizer.AddSizer(buttons_sizer, flag=wx.GROW)
-        main_sizer.AddWindow(self.VariablesList, flag=wx.GROW)
+        main_sizer.Add(buttons_sizer, flag=wx.GROW)
+        main_sizer.Add(self.VariablesList, flag=wx.GROW)
         main_sizer.AddGrowableCol(0)
         main_sizer.AddGrowableRow(1)
 
@@ -401,7 +400,7 @@ class PouInstanceVariablesPanel(wx.Panel):
     def OnVariablesListItemActivated(self, event):
         selected_item = event.GetItem()
         if selected_item is not None and selected_item.IsOk():
-            item_infos = self.VariablesList.GetPyData(selected_item)
+            item_infos = self.VariablesList.GetItemData(selected_item)
             if item_infos is not None:
 
                 item_button = self.VariablesList.IsOverItemRightImage(
@@ -421,7 +420,7 @@ class PouInstanceVariablesPanel(wx.Panel):
                         else:
                             tagname = None
                     else:
-                        parent_infos = self.VariablesList.GetPyData(selected_item.GetParent())
+                        parent_infos = self.VariablesList.GetItemData(selected_item.GetParent())
                         if item_infos.var_class == ITEM_ACTION:
                             tagname = ComputePouActionName(parent_infos.type, item_infos.name)
                         elif item_infos.var_class == ITEM_TRANSITION:
@@ -444,7 +443,7 @@ class PouInstanceVariablesPanel(wx.Panel):
             instance_path = self.InstanceChoice.GetStringSelection()
             item, flags = self.VariablesList.HitTest(event.GetPosition())
             if item is not None:
-                item_infos = self.VariablesList.GetPyData(item)
+                item_infos = self.VariablesList.GetItemData(item)
                 if item_infos is not None:
 
                     item_button = self.VariablesList.IsOverItemRightImage(

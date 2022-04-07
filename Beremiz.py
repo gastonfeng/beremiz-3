@@ -25,10 +25,10 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
+import getopt
 import os
 import sys
-import getopt
-from past.builtins import execfile
 
 import wx
 from wx.lib.agw.advancedsplash import AdvancedSplash, AS_NOTIMEOUT, AS_CENTER_ON_SCREEN
@@ -154,7 +154,7 @@ class BeremizIDELauncher(object):
             sys.path.append(extension_folder)
             AddCatalog(os.path.join(extension_folder, "locale"))
             AddBitmapFolder(os.path.join(extension_folder, "images"))
-            execfile(extfilename, self.globals())
+            exec(open(extfilename).read())
 
     def CheckUpdates(self):
         if self.updateinfo_url is not None:

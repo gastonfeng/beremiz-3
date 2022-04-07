@@ -24,10 +24,11 @@
 
 
 from __future__ import absolute_import
+
 from functools import reduce
+
 import wx
 import wx.stc
-from six.moves import xrange
 
 if wx.Platform == '__WXMSW__':
     faces = {
@@ -72,7 +73,7 @@ def GetCursorPos(old, new):
     new_length = len(new)
     common_length = min(old_length, new_length)
     i = 0
-    for i in xrange(common_length):
+    for i in range(common_length):
         if old[i] != new[i]:
             break
     if old_length < new_length:
@@ -102,7 +103,7 @@ class CustomStyledTextCtrl(wx.stc.StyledTextCtrl):
                 x, _y = event.GetPosition()
                 margin_width = reduce(
                     lambda x, y: x + y,
-                    [self.GetMarginWidth(i) for i in xrange(3)],
+                    [self.GetMarginWidth(i) for i in range(3)],
                     0)
                 if x <= margin_width:
                     self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))

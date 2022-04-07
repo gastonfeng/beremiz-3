@@ -23,26 +23,27 @@
 
 
 from __future__ import absolute_import
-from threading import Thread, Lock, Event, Condition
+
+import _ctypes
 import ctypes
+import hashlib
 import os
+import shutil
 import sys
 import traceback
-import shutil
-from time import time
-import hashlib
-from tempfile import mkstemp
 from functools import wraps, partial
-from six.moves import xrange
-from past.builtins import execfile
-import _ctypes
+from tempfile import mkstemp
+from threading import Thread, Lock, Event, Condition
+from time import time
 
-from runtime.typemapping import TypeTranslator
-from runtime.loglevels import LogLevelsDefault, LogLevelsCount
-from runtime.Stunnel import getPSKID
-from runtime import PlcStatus
+from past.builtins import execfile
+
 from runtime import MainWorker
+from runtime import PlcStatus
 from runtime import default_evaluator
+from runtime.Stunnel import getPSKID
+from runtime.loglevels import LogLevelsDefault, LogLevelsCount
+from runtime.typemapping import TypeTranslator
 
 if os.name in ("nt", "ce"):
     dlopen = _ctypes.LoadLibrary
@@ -554,7 +555,7 @@ class PLCObject(object):
 
     @RunInMain
     def _GetPLCstatus(self):
-        return self.PLCStatus, map(self.GetLogCount, xrange(LogLevelsCount))
+        return self.PLCStatus, map(self.GetLogCount, range(LogLevelsCount))
 
     @RunInMain
     def GetPLCID(self):

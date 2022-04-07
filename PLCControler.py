@@ -26,26 +26,23 @@
 
 from __future__ import absolute_import
 from __future__ import division
-from copy import deepcopy
-import os
-import re
-import datetime
-from time import localtime
-from functools import reduce
-from future.builtins import round
 
-import util.paths as paths
+import datetime
+import os
+from copy import deepcopy
+from time import localtime
+
+from PLCGenerator import *
+from graphics.GraphicCommons import *
 from plcopen import *
-from plcopen.types_enums import *
+from plcopen.BlockInstanceCollector import BlockInstanceCollector
+from plcopen.InstanceTagnameCollector import InstanceTagnameCollector
 from plcopen.InstancesPathCollector import InstancesPathCollector
 from plcopen.POUVariablesCollector import POUVariablesCollector
-from plcopen.InstanceTagnameCollector import InstanceTagnameCollector
-from plcopen.BlockInstanceCollector import BlockInstanceCollector
 from plcopen.VariableInfoCollector import VariableInfoCollector
-from graphics.GraphicCommons import *
-from PLCGenerator import *
 
-duration_model = re.compile(r"(?:([0-9]{1,2})h)?(?:([0-9]{1,2})m(?!s))?(?:([0-9]{1,2})s)?(?:([0-9]{1,3}(?:\.[0-9]*)?)ms)?")
+duration_model = re.compile(
+    r"(?:([0-9]{1,2})h)?(?:([0-9]{1,2})m(?!s))?(?:([0-9]{1,2})s)?(?:([0-9]{1,3}(?:\.[0-9]*)?)ms)?")
 VARIABLE_NAME_SUFFIX_MODEL = re.compile(r'(\d+)$')
 
 ScriptDirectory = paths.AbsDir(__file__)
@@ -74,7 +71,7 @@ class UndoBuffer(object):
             self.MinIndex = 0
             self.MaxIndex = 0
         # Initialising buffer with currentstate at the first place
-        for i in xrange(UNDO_BUFFER_LENGTH):
+        for i in range(UNDO_BUFFER_LENGTH):
             if i == 0:
                 self.Buffer.append(currentstate)
             else:

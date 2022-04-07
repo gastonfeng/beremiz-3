@@ -25,13 +25,9 @@
 
 from __future__ import absolute_import
 from __future__ import division
-import wx
-from future.builtins import round
-from six.moves import xrange
 
-from graphics.GraphicCommons import *
 from graphics.DebugDataConsumer import DebugDataConsumer
-from plcopen.structures import *
+from graphics.GraphicCommons import *
 
 
 # -------------------------------------------------------------------------------
@@ -238,7 +234,7 @@ class LD_PowerRail(Graphic_Element):
             self.Type = type
             self.Clean()
             self.Connectors = []
-            for dummy in xrange(connectors):
+            for dummy in range(connectors):
                 self.AddConnector()
             self.RefreshSize()
 
@@ -255,7 +251,7 @@ class LD_PowerRail(Graphic_Element):
                 position = connector.GetRelPosition()
                 self.RealConnectors.append(max(0., min((position.y - self.Extensions[0]) / height, 1.)))
         elif len(self.Connectors) > 1:
-            self.RealConnectors = map(lambda x: x * 1 / (len(self.Connectors) - 1), xrange(len(self.Connectors)))
+            self.RealConnectors = map(lambda x: x * 1 / (len(self.Connectors) - 1), range(len(self.Connectors)))
         else:
             self.RealConnectors = [0.5]
         Graphic_Element.OnLeftDown(self, event, dc, scaling)

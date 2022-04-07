@@ -27,45 +27,43 @@
 Beremiz Project Controller
 """
 
-
 from __future__ import absolute_import
-import os
-import traceback
-import time
-from time import localtime
-import shutil
-import re
-import tempfile
+
 import hashlib
+import os
+import re
+import shutil
+import tempfile
+import time
+import traceback
 from datetime import datetime
-from weakref import WeakKeyDictionary
-from functools import reduce
-from itertools import izip
 from distutils.dir_util import copy_tree
-from six.moves import xrange
+from functools import reduce
+from time import localtime
+from weakref import WeakKeyDictionary
 
 import wx
 
-import features
 import connectors
+import features
+import targets
 import util.paths as paths
-from util.misc import CheckPathPerm, GetClassImporter
-from util.MiniTextControler import MiniTextControler
-from util.ProcessLogger import ProcessLogger
-from util.BitmapLibrary import GetBitmap
-from editors.FileManagementPanel import FileManagementPanel
-from editors.ProjectNodeEditor import ProjectNodeEditor
-from editors.IECCodeViewer import IECCodeViewer
-from editors.DebugViewer import DebugViewer, REFRESH_PERIOD
-from dialogs import UriEditor, IDManager
+from ConfigTreeNode import ConfigTreeNode, XSDSchemaErrorMessage
 from PLCControler import PLCControler
+from POULibrary import UserAddressedException
+from dialogs import UriEditor, IDManager
+from editors.DebugViewer import DebugViewer, REFRESH_PERIOD
+from editors.FileManagementPanel import FileManagementPanel
+from editors.IECCodeViewer import IECCodeViewer
+from editors.ProjectNodeEditor import ProjectNodeEditor
 from plcopen.structures import IEC_KEYWORDS
 from plcopen.types_enums import ComputeConfigurationResourceName, ITEM_CONFNODE
-import targets
-from runtime.typemapping import DebugTypesSize, UnpackDebugBuffer
 from runtime import PlcStatus
-from ConfigTreeNode import ConfigTreeNode, XSDSchemaErrorMessage
-from POULibrary import UserAddressedException
+from runtime.typemapping import DebugTypesSize, UnpackDebugBuffer
+from util.BitmapLibrary import GetBitmap
+from util.MiniTextControler import MiniTextControler
+from util.ProcessLogger import ProcessLogger
+from util.misc import CheckPathPerm, GetClassImporter
 
 base_folder = paths.AbsParentDir(__file__)
 
@@ -1106,14 +1104,15 @@ class ProjectController(ConfigTreeNode, PLCControler):
         if not self.BeremizRoot.getDisable_Extensions():
             plc_main_code = targets.GetCode("plc_main_head.c") % {
                 "calls_prototypes": "\n".join([(
-                    "int __init_%(s)s(int argc,char **argv);\n" +
-                    "void __cleanup_%(s)s(void);\n" +
-                    "void __retrieve_%(s)s(void);\n" +
-                    "void __publish_%(s)s(void);") % {'s': locstr} for locstr in locstrs]),
+                                                       "int __init_%(s)s(int argc,char **argv);\n" +
+                                                       "void __cleanup_%(s)s(void);\n" +
+                                                       "void __retrieve_%(s)s(void);\n" +
+                                                       "void __publish_%(s)s(void);") % {'s': locstr} for locstr in
+                                               locstrs]),
                 "retrieve_calls": "\n    ".join([
                     "__retrieve_%s();" % locstr for locstr in locstrs]),
                 "publish_calls": "\n    ".join([  # Call publish in reverse order
-                    "__publish_%s();" % locstrs[i - 1] for i in xrange(len(locstrs), 0, -1)]),
+                    "__publish_%s();" % locstrs[i - 1] for i in range(len(locstrs), 0, -1)]),
                 "init_calls": "\n    ".join([
                     "init_level=%d; " % (i + 1) +
                     "if((res = __init_%s(argc,argv))){" % locstr +
@@ -1121,7 +1120,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
                     "return res;}" for i, locstr in enumerate(locstrs)]),
                 "cleanup_calls": "\n    ".join([
                     "if(init_level >= %d) " % i +
-                    "__cleanup_%s();" % locstrs[i - 1] for i in xrange(len(locstrs), 0, -1)])
+                    "__cleanup_%s();" % locstrs[i - 1] for i in range(len(locstrs), 0, -1)])
             }
         else:
             plc_main_code = targets.GetCode("plc_main_head.c") % {
@@ -1570,7 +1569,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
 
 
         buffers, self.DebugValuesBuffers = (self.DebugValuesBuffers,
-                                            [list() for dummy in xrange(len(self.TracedIECPath))])
+                                            [list() for dummy in range(len(self.TracedIECPath))])
 
         ticks, self.DebugTicks = self.DebugTicks, []
 

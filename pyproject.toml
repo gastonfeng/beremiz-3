@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "beremiz-3"
+version = "0.1.0"
+description = ""
+authors = ["gastonfeng <gastonfeng@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+wxPython = "^4.1.1"
+wxasync = "^0.46"
+matplotlib = "^3.5.1"
+lxml = "^4.8.0"
+zeroconf = "^0.38.4"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "http://mirrors.aliyun.com/pypi/simple/"

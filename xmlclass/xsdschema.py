@@ -25,14 +25,8 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-import os
-import re
-import datetime
+
 from types import FunctionType
-from xml.dom import minidom
-from future.builtins import round
-from six import string_types
-from past.builtins import long
 
 from xmlclass.xmlclass import *
 
@@ -73,13 +67,15 @@ def GenerateFloatXMLText(extra_values=None, decimal=None):
         if name is not None:
             text += "</%s>\n" % name
         return text
+
     return generateXMLTextMethod
 
 
 DEFAULT_FACETS = GenerateDictFacets(["pattern", "whiteSpace", "enumeration"])
-NUMBER_FACETS = GenerateDictFacets(DEFAULT_FACETS.keys() + ["maxInclusive", "maxExclusive", "minInclusive", "minExclusive"])
-DECIMAL_FACETS = GenerateDictFacets(NUMBER_FACETS.keys() + ["totalDigits", "fractionDigits"])
-STRING_FACETS = GenerateDictFacets(DEFAULT_FACETS.keys() + ["length", "minLength", "maxLength"])
+NUMBER_FACETS = GenerateDictFacets(
+    list(DEFAULT_FACETS.keys()) + ["maxInclusive", "maxExclusive", "minInclusive", "minExclusive"])
+DECIMAL_FACETS = GenerateDictFacets(list(NUMBER_FACETS.keys()) + ["totalDigits", "fractionDigits"])
+STRING_FACETS = GenerateDictFacets(list(DEFAULT_FACETS.keys()) + ["length", "minLength", "maxLength"])
 
 ALL_FACETS = ["pattern", "whiteSpace", "enumeration", "maxInclusive",
               "maxExclusive", "minInclusive", "minExclusive", "totalDigits",
@@ -170,7 +166,7 @@ def CreateSimpleType(factory, attributes, typeinfos):
 
     if typeinfos["type"] in ["restriction", "extension"]:
         # Search for base type definition
-        if isinstance(typeinfos["base"], string_types):
+        if isinstance(typeinfos["base"], str):
             basetypeinfos = factory.FindSchemaElement(typeinfos["base"], SIMPLETYPE)
             if basetypeinfos is None:
                 raise "\"%s\" isn't defined!" % typeinfos["base"]
@@ -201,10 +197,11 @@ def CreateSimpleType(factory, attributes, typeinfos):
             basevalue = basetypeinfos["facets"][facettype][0]
             if facettype in ["enumeration", "pattern"]:
                 value = basetypeinfos["extract"](value, False)
+                key = list(facets.keys())
                 if len(facets) == 0:
                     facets[facettype] = ([value], False)
                     continue
-                elif facets.keys() == [facettype]:
+                elif key == [facettype]:
                     facets[facettype][0].append(value)
                     continue
                 else:
@@ -394,7 +391,7 @@ def CreateSimpleType(factory, attributes, typeinfos):
 
     elif typeinfos["type"] == "list":
         # Search for item type definition
-        if isinstance(typeinfos["itemType"], string_types):
+        if isinstance(typeinfos["itemType"], str):
             itemtypeinfos = factory.FindSchemaElement(typeinfos["itemType"], SIMPLETYPE)
             if itemtypeinfos is None:
                 raise "\"%s\" isn't defined!" % typeinfos["itemType"]
@@ -440,7 +437,7 @@ def CreateSimpleType(factory, attributes, typeinfos):
         # Search for member types definition
         membertypesinfos = []
         for membertype in typeinfos["memberTypes"]:
-            if isinstance(membertype, string_types):
+            if isinstance(membertype, str):
                 infos = factory.FindSchemaElement(membertype, SIMPLETYPE)
                 if infos is None:
                     raise ValueError("\"%s\" isn't defined!" % membertype)
@@ -514,7 +511,7 @@ def ExtractAttributes(factory, elements, base=None):
     attrnames = {}
     if base is not None:
         basetypeinfos = factory.FindSchemaElement(base)
-        if not isinstance(basetypeinfos, string_types) and basetypeinfos["type"] == COMPLEXTYPE:
+        if not isinstance(basetypeinfos, str) and basetypeinfos["type"] == COMPLEXTYPE:
             attrnames = dict(map(lambda x: (x["name"], True), basetypeinfos["attributes"]))
 
     for element in elements:
@@ -815,7 +812,7 @@ def ReduceChoice(factory, attributes, elements):
                 raise ValueError("Only group composed of \"choice\" can be referenced in \"choice\" element!")
             choices_tmp = []
             for choice in elmtgroup["choices"]:
-                if not isinstance(choice["elmt_type"], string_types) and choice["elmt_type"]["type"] == COMPLEXTYPE:
+                if not isinstance(choice["elmt_type"], str) and choice["elmt_type"]["type"] == COMPLEXTYPE:
                     elmt_type = "%s_%s" % (elmtgroup["name"], choice["name"])
                     if factory.TargetNamespace is not None:
                         elmt_type = "%s:%s" % (factory.TargetNamespace, elmt_type)
@@ -849,7 +846,7 @@ def ReduceSequence(factory, attributes, elements):
                 raise ValueError("Only group composed of \"sequence\" can be referenced in \"sequence\" element!")
             elements_tmp = []
             for element in elmtgroup["elements"]:
-                if not isinstance(element["elmt_type"], string_types) and element["elmt_type"]["type"] == COMPLEXTYPE:
+                if not isinstance(element["elmt_type"], str) and element["elmt_type"]["type"] == COMPLEXTYPE:
                     elmt_type = "%s_%s" % (elmtgroup["name"], element["name"])
                     if factory.TargetNamespace is not None:
                         elmt_type = "%s:%s" % (factory.TargetNamespace, elmt_type)
@@ -1061,7 +1058,7 @@ class XSDClassFactory(ClassFactory):
             if child.nodeType == self.Document.ELEMENT_NODE:
                 schema = child
                 break
-        for qualified_name, attr in schema._attrs.items():
+        for qualified_name, attr in list(schema._attrs.items()):
             namespace, name = DecomposeQualifiedName(qualified_name)
             if namespace == "xmlns":
                 value = GetAttributeValue(attr)
@@ -1120,7 +1117,7 @@ def GenerateParserFromXSD(filepath):
     This function opens the xsd file and generate a xml parser with class lookup from
     the xml tree
     """
-    xsdfile = open(filepath, 'r')
+    xsdfile = open(filepath, 'r', encoding='utf-8')
     xsdstring = xsdfile.read()
     xsdfile.close()
     cwd = os.getcwd()
@@ -2215,7 +2212,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)},
+        "check": lambda x: isinstance(x, str)},
 
     "normalizedString": {
         "type": SIMPLETYPE,
@@ -2224,7 +2221,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "token": {
@@ -2234,7 +2231,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "base64Binary": {
@@ -2244,7 +2241,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(str),
         "initial": lambda: 0,
-        "check": lambda x: isinstance(x, (int, long))
+        "check": lambda x: isinstance(x, (int,))
     },
 
     "hexBinary": {
@@ -2434,7 +2431,7 @@ XSD_NAMESPACE = {
         "facets": NUMBER_FACETS,
         "generate": GenerateSimpleTypeXMLText(str),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "dateTime": {
@@ -2474,7 +2471,7 @@ XSD_NAMESPACE = {
         "facets": NUMBER_FACETS,
         "generate": GenerateSimpleTypeXMLText(str),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "gYearMonth": {
@@ -2484,7 +2481,7 @@ XSD_NAMESPACE = {
         "facets": NUMBER_FACETS,
         "generate": GenerateSimpleTypeXMLText(str),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "gMonth": {
@@ -2494,7 +2491,7 @@ XSD_NAMESPACE = {
         "facets": NUMBER_FACETS,
         "generate": GenerateSimpleTypeXMLText(str),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "gMonthDay": {
@@ -2504,7 +2501,7 @@ XSD_NAMESPACE = {
         "facets": NUMBER_FACETS,
         "generate": GenerateSimpleTypeXMLText(str),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "gDay": {
@@ -2514,7 +2511,7 @@ XSD_NAMESPACE = {
         "facets": NUMBER_FACETS,
         "generate": GenerateSimpleTypeXMLText(str),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "Name": {
@@ -2524,7 +2521,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "QName": {
@@ -2534,7 +2531,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "NCName": {
@@ -2544,7 +2541,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "anyURI": {
@@ -2554,7 +2551,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "language": {
@@ -2564,7 +2561,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "en",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "ID": {
@@ -2574,7 +2571,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "IDREF": {
@@ -2584,7 +2581,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "IDREFS": {
@@ -2594,7 +2591,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "ENTITY": {
@@ -2604,7 +2601,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "ENTITIES": {
@@ -2614,7 +2611,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "NOTATION": {
@@ -2624,7 +2621,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "NMTOKEN": {
@@ -2634,7 +2631,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     "NMTOKENS": {
@@ -2644,7 +2641,7 @@ XSD_NAMESPACE = {
         "facets": STRING_FACETS,
         "generate": GenerateSimpleTypeXMLText(lambda x: x),
         "initial": lambda: "",
-        "check": lambda x: isinstance(x, string_types)
+        "check": lambda x: isinstance(x, str)
     },
 
     # Complex Types

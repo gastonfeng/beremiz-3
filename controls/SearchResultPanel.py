@@ -24,15 +24,13 @@
 
 
 from __future__ import absolute_import
-from functools import reduce
 
-import wx
-import wx.lib.buttons
 import wx.lib.agw.customtreectrl as CT
+import wx.lib.buttons
 
 from PLCControler import *
-from util.BitmapLibrary import GetBitmap
 from plcopen.types_enums import GetElementType
+from util.BitmapLibrary import GetBitmap
 
 
 def GenerateName(infos):
@@ -52,16 +50,16 @@ def GenerateName(infos):
 class SearchResultPanel(wx.Panel):
 
     def _init_coll_MainSizer_Items(self, parent):
-        parent.AddSizer(self.HeaderSizer, 0, border=0, flag=wx.GROW)
-        parent.AddWindow(self.SearchResultsTree, 1, border=0, flag=wx.GROW)
+        parent.Add(self.HeaderSizer, 0, border=0, flag=wx.GROW)
+        parent.Add(self.SearchResultsTree, 1, border=0, flag=wx.GROW)
 
     def _init_coll_MainSizer_Growables(self, parent):
         parent.AddGrowableCol(0)
         parent.AddGrowableRow(1)
 
     def _init_coll_HeaderSizer_Items(self, parent):
-        parent.AddWindow(self.HeaderLabel, 1, border=5, flag=wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        parent.AddWindow(self.ResetButton, 0, border=0, flag=0)
+        parent.Add(self.HeaderLabel, 1, border=5, flag=wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        parent.Add(self.ResetButton, 0, border=0, flag=0)
 
     def _init_coll_HeaderSizer_Growables(self, parent):
         parent.AddGrowableCol(0)
@@ -90,7 +88,7 @@ class SearchResultPanel(wx.Panel):
         self.ResetButton = wx.lib.buttons.GenBitmapButton(
             self, bitmap=GetBitmap("reset"),
             size=wx.Size(28, 28), style=wx.NO_BORDER)
-        self.ResetButton.SetToolTipString(_("Reset search result"))
+        self.ResetButton.SetToolTip(_("Reset search result"))
         self.Bind(wx.EVT_BUTTON, self.OnResetButton, self.ResetButton)
 
         self._init_sizers()
@@ -274,7 +272,7 @@ class SearchResultPanel(wx.Panel):
             item_name = infos["name"]
 
         self.SearchResultsTree.SetItemText(root, item_name)
-        self.SearchResultsTree.SetPyData(root, infos["data"])
+        self.SearchResultsTree.SetItemData(root, infos["data"])
         self.SearchResultsTree.SetItemBackgroundColour(root, wx.WHITE)
         self.SearchResultsTree.SetItemTextColour(root, wx.BLACK)
         if infos["type"] is not None:
@@ -299,7 +297,7 @@ class SearchResultPanel(wx.Panel):
         if text is not None:
             text_ctrl_style = wx.BORDER_NONE | wx.TE_READONLY | wx.TE_RICH2
             if wx.Platform != '__WXMSW__' or len(text.splitlines()) > 1:
-                text_ctrl_style |= wx.TE_MULTILINE | wx.TE_NO_VSCROLL
+                text_ctrl_style |= wx.TE_MULTILINE
             text_ctrl = wx.TextCtrl(id=-1, parent=self.SearchResultsTree, pos=wx.Point(0, 0),
                                     value=text, style=text_ctrl_style)
             width, height = text_ctrl.GetTextExtent(text)
@@ -320,7 +318,7 @@ class SearchResultPanel(wx.Panel):
             item, root_cookie = self.SearchResultsTree.GetNextChild(root, root_cookie)
 
     def ShowSearchResults(self, item):
-        data = self.SearchResultsTree.GetPyData(item)
+        data = self.SearchResultsTree.GetItemData(item)
         if isinstance(data, tuple):
             search_results = [data]
         else:

@@ -24,13 +24,13 @@
 
 
 from __future__ import absolute_import
-import os
-from six.moves import xrange
 
-from modbus.mb_utils import *
+import os
+
+import util.paths as paths
 from ConfigTreeNode import ConfigTreeNode
 from PLCControler import LOCATION_CONFNODE, LOCATION_VAR_MEMORY
-import util.paths as paths
+from modbus.mb_utils import *
 
 ModbusPath = paths.ThirdPartyPath("Modbus")
 

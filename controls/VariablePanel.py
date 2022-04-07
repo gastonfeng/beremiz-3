@@ -25,6 +25,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 import re
 from builtins import str as text
 
@@ -32,19 +33,16 @@ import wx
 import wx.grid
 import wx.lib.buttons
 from six import string_types
-from six.moves import xrange
 
-
-from plcopen.structures import LOCATIONDATATYPES, TestIdentifier, IEC_KEYWORDS, DefaultType
-from plcopen.VariableInfoCollector import _VariableInfos
-from graphics.GraphicCommons import REFRESH_HIGHLIGHT_PERIOD, ERROR_HIGHLIGHT
-from dialogs.ArrayTypeDialog import ArrayTypeDialog
 from controls.CustomGrid import CustomGrid
 from controls.CustomTable import CustomTable
 from controls.LocationCellEditor import LocationCellEditor
+from dialogs.ArrayTypeDialog import ArrayTypeDialog
+from graphics.GraphicCommons import REFRESH_HIGHLIGHT_PERIOD, ERROR_HIGHLIGHT
+from plcopen.VariableInfoCollector import _VariableInfos
+from plcopen.structures import LOCATIONDATATYPES, TestIdentifier, IEC_KEYWORDS, DefaultType
 from util.BitmapLibrary import GetBitmap
 from util.TranslationCatalogs import NoTranslate
-
 
 # -------------------------------------------------------------------------------
 #                                 Helpers
@@ -996,7 +994,7 @@ class VariablePanel(wx.Panel):
 
     def AddVariableHighlight(self, infos, highlight_type):
         if isinstance(infos[0], tuple):
-            for i in xrange(*infos[0]):
+            for i in range(*infos[0]):
                 self.Table.AddHighlight((i,) + infos[1:], highlight_type)
             cell_visible = infos[0][0]
         else:
@@ -1008,7 +1006,7 @@ class VariablePanel(wx.Panel):
 
     def RemoveVariableHighlight(self, infos, highlight_type):
         if isinstance(infos[0], tuple):
-            for i in xrange(*infos[0]):
+            for i in range(*infos[0]):
                 self.Table.RemoveHighlight((i,) + infos[1:], highlight_type)
         else:
             self.Table.RemoveHighlight(infos, highlight_type)

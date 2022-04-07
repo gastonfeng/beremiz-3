@@ -5,12 +5,13 @@
 #
 
 from __future__ import absolute_import
+
 import ctypes
 from ctypes import *
 from datetime import timedelta as td
 
-ctypes.pythonapi.PyString_AsString.argtypes = (ctypes.c_void_p,)
-ctypes.pythonapi.PyString_AsString.restype = ctypes.POINTER(ctypes.c_char)
+ctypes.pythonapi.PyUnicode_AsUTF8.argtypes = (ctypes.c_void_p,)
+ctypes.pythonapi.PyUnicode_AsUTF8.restype = ctypes.POINTER(ctypes.c_char)
 
 
 class IEC_STRING(Structure):
@@ -74,36 +75,29 @@ SwapedEndianessTypeTranslator = {
 TypeTranslator = SameEndianessTypeTranslator
 
 # Construct debugger natively supported types
-DebugTypesSize = dict([(key, sizeof(t)) for key, (t, p, u) in SameEndianessTypeTranslator.iteritems() if t is not None])
+DebugTypesSize = dict([(key, sizeof(t)) for key, (t, p, u) in SameEndianessTypeTranslator.items() if t is not None])
 
 
 def UnpackDebugBuffer(buff, indexes):
     res = []
     buffoffset = 0
     buffsize = len(buff)
-    buffptr = cast(ctypes.pythonapi.PyString_AsString(id(buff)), c_void_p).value
+    buffptr = cast(buff, c_void_p).value
     for iectype in indexes:
         c_type, unpack_func, _pack_func = \
             TypeTranslator.get(iectype, (None, None, None))
 
-        cursor = c_void_p(buffptr + buffoffset)
-        if iectype == "STRING":
+        if c_type is not None and buffoffset < buffsize:
             # strlen is stored in c_uint8 and sizeof(c_uint8) is 1
             # first check we can read size
-            if (buffoffset + 1) <= buffsize:
-                size = 1 + cast(cursor,POINTER(c_type)).contents.len
-            else:
-                return None
-        else:
-            size = sizeof(c_type)
+            cursor = c_void_p(buffptr + buffoffset)
 
-        if c_type is not None and (buffoffset + size) <= buffsize:
             value = unpack_func(cast(cursor,
                                      POINTER(c_type)).contents)
-            buffoffset += size
+            buffoffset += sizeof(c_type) if iectype != "STRING" else len(value) + 1
             res.append(value)
         else:
-            return None
+            break
     if buffoffset and buffoffset == buffsize:
         return res
     return None

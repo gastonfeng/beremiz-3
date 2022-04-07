@@ -25,17 +25,18 @@
 
 
 from __future__ import absolute_import
+
 import re
-from six.moves import xrange
 
 import wx
 import wx.grid
 import wx.lib.buttons
-from plcopen.structures import IEC_KEYWORDS, TestIdentifier, DefaultType
-from graphics.GraphicCommons import REFRESH_HIGHLIGHT_PERIOD
+
 from controls import CustomEditableListBox, CustomGrid, CustomTable, CustomIntCtrl
 from dialogs import ArrayTypeDialog
 from editors.EditorPanel import EditorPanel
+from graphics.GraphicCommons import REFRESH_HIGHLIGHT_PERIOD
+from plcopen.structures import IEC_KEYWORDS, TestIdentifier, DefaultType
 from util.BitmapLibrary import GetBitmap
 from util.TranslationCatalogs import NoTranslate
 
@@ -239,7 +240,7 @@ class DataTypeEditor(EditorPanel):
         subrange_panel_sizer.AddWindow(self.SubrangeMinimum, 1, border=5,
                                        flag=wx.GROW | wx.ALL)
 
-        for dummy in xrange(2):
+        for dummy in range(2):
             subrange_panel_sizer.AddWindow(wx.Size(0, 0), 1)
 
         subrange_maximum_label = wx.StaticText(self.SubrangePanel,
@@ -788,7 +789,7 @@ class DataTypeEditor(EditorPanel):
                 control.SetStyle(0, len(value), wx.TextAttr(wx.NullColour))
             elif isinstance(control, wx.gizmos.EditableListBox):
                 listctrl = control.GetListCtrl()
-                for i in xrange(listctrl.GetItemCount()):
+                for i in range(listctrl.GetItemCount()):
                     listctrl.SetItemBackgroundColour(i, wx.NullColour)
                     listctrl.SetItemTextColour(i, wx.NullColour)
         self.StructureElementsTable.ClearHighlights(highlight_type)

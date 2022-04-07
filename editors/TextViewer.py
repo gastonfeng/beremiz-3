@@ -25,17 +25,17 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 import re
 from functools import reduce
 
 import wx
 import wx.stc
-from six.moves import xrange
 
+from controls.CustomStyledTextCtrl import CustomStyledTextCtrl, faces, GetCursorPos
+from editors.EditorPanel import EditorPanel
 from graphics.GraphicCommons import ERROR_HIGHLIGHT, SEARCH_RESULT_HIGHLIGHT, REFRESH_HIGHLIGHT_PERIOD
 from plcopen.structures import ST_BLOCK_START_KEYWORDS, IEC_BLOCK_START_KEYWORDS, LOCATIONDATATYPES
-from editors.EditorPanel import EditorPanel
-from controls.CustomStyledTextCtrl import CustomStyledTextCtrl, faces, GetCursorPos
 
 # -------------------------------------------------------------------------------
 #                         Textual programs Viewer class
@@ -43,9 +43,9 @@ from controls.CustomStyledTextCtrl import CustomStyledTextCtrl, faces, GetCursor
 
 
 NEWLINE = "\n"
-NUMBERS = [str(i) for i in xrange(10)]
+NUMBERS = [str(i) for i in range(10)]
 LETTERS = ['_']
-for i in xrange(26):
+for i in range(26):
     LETTERS.append(chr(ord('a') + i))
     LETTERS.append(chr(ord('A') + i))
 
@@ -70,7 +70,7 @@ HIGHLIGHT_TYPES = {
 
 
 def LineStartswith(line, symbols):
-    return reduce(lambda x, y: x or y, map(line.startswith, symbols), False)
+    return reduce(lambda x, y: x or y, list(map(line.startswith, symbols)), False)
 
 
 class TextViewer(EditorPanel):

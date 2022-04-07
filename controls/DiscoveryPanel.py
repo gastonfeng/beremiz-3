@@ -25,8 +25,9 @@
 
 
 from __future__ import absolute_import
+
 import socket
-from six.moves import xrange
+
 import wx
 import wx.lib.mixins.listctrl as listmix
 from zeroconf import ServiceBrowser, Zeroconf, get_all_addresses
@@ -210,7 +211,7 @@ class DiscoveryPanel(wx.Panel, listmix.ColumnSorterMixin):
         '''
 
         # loop through the list items looking for the service that went offline
-        for idx in xrange(self.ServicesList.GetItemCount()):
+        for idx in range(self.ServicesList.GetItemCount()):
             # this is the unique identifier assigned to the item
             item_id = self.ServicesList.GetItemData(idx)
 

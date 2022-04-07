@@ -25,28 +25,21 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 import math
-from time import time as gettime
 from threading import Lock
-from future.builtins import round
+from time import time as gettime
 
-import wx
-from six.moves import xrange
-
-from plcopen.structures import *
-from plcopen.types_enums import ComputePouName
 from PLCControler import ITEM_VAR_LOCAL, ITEM_POU, ITEM_PROGRAM, ITEM_FUNCTIONBLOCK
-
-from graphics.GraphicCommons import *
-from graphics.FBD_Objects import *
-from graphics.LD_Objects import *
-from graphics.SFC_Objects import *
-from graphics.RubberBand import RubberBand
-from graphics.DebugDataConsumer import DebugDataConsumer
-
 from dialogs import *
 from editors.DebugViewer import DebugViewer, REFRESH_PERIOD
 from editors.EditorPanel import EditorPanel
+from graphics.DebugDataConsumer import DebugDataConsumer
+from graphics.FBD_Objects import *
+from graphics.LD_Objects import *
+from graphics.RubberBand import RubberBand
+from graphics.SFC_Objects import *
+from plcopen.types_enums import ComputePouName
 
 SCROLLBAR_UNIT = 10
 WINDOW_BORDER = 10
@@ -88,7 +81,7 @@ if wx.Platform == '__WXMSW__':
     MAX_ZOOMIN = 4
 else:
     MAX_ZOOMIN = 7
-ZOOM_FACTORS = [math.sqrt(2) ** x for x in xrange(-6, MAX_ZOOMIN)]
+ZOOM_FACTORS = [math.sqrt(2) ** x for x in range(-6, MAX_ZOOMIN)]
 
 
 def GetVariableCreationFunction(variable_type):

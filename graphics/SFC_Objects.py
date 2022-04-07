@@ -25,14 +25,9 @@
 
 from __future__ import absolute_import
 from __future__ import division
-from future.builtins import round
 
-import wx
-from six.moves import xrange
-
-from graphics.GraphicCommons import *
 from graphics.DebugDataConsumer import DebugDataConsumer
-from plcopen.structures import *
+from graphics.GraphicCommons import *
 
 
 def GetWireSize(block):
@@ -1067,12 +1062,15 @@ class SFC_Divergence(Graphic_Element):
         if self.Type in [SELECTION_DIVERGENCE, SIMULTANEOUS_DIVERGENCE]:
             self.Inputs = [Connector(self, "", None, wx.Point(self.Size[0] // 2, 0), NORTH, onlyone=True)]
             self.Outputs = []
-            for i in xrange(number):
-                self.Outputs.append(Connector(self, "", None, wx.Point(i * SFC_DEFAULT_SEQUENCE_INTERVAL, self.Size[1]), SOUTH, onlyone=True))
+            for i in range(number):
+                self.Outputs.append(
+                    Connector(self, "", None, wx.Point(i * SFC_DEFAULT_SEQUENCE_INTERVAL, self.Size[1]), SOUTH,
+                              onlyone=True))
         elif self.Type in [SELECTION_CONVERGENCE, SIMULTANEOUS_CONVERGENCE]:
             self.Inputs = []
-            for i in xrange(number):
-                self.Inputs.append(Connector(self, "", None, wx.Point(i * SFC_DEFAULT_SEQUENCE_INTERVAL, 0), NORTH, onlyone=True))
+            for i in range(number):
+                self.Inputs.append(
+                    Connector(self, "", None, wx.Point(i * SFC_DEFAULT_SEQUENCE_INTERVAL, 0), NORTH, onlyone=True))
             self.Outputs = [Connector(self, "", None, wx.Point(self.Size[0] // 2, self.Size[1]), SOUTH, onlyone=True)]
         self.Value = None
         self.PreviousValue = None

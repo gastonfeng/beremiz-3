@@ -25,11 +25,8 @@
 
 from __future__ import absolute_import
 from __future__ import division
-import wx
-from six.moves import xrange
 
 from graphics.GraphicCommons import *
-from plcopen.structures import *
 
 
 # -------------------------------------------------------------------------------
@@ -165,7 +162,7 @@ class FBD_Block(Graphic_Element):
             linesize = max((self.Size[1] - BLOCK_LINE_SIZE) // lines, BLOCK_LINE_SIZE)
             # Update inputs and outputs positions
             position = BLOCK_LINE_SIZE + linesize // 2
-            for i in xrange(lines):
+            for i in range(lines):
                 if scaling is not None:
                     ypos = round_scaling(self.Pos.y + position, scaling[1]) - self.Pos.y
                 else:
@@ -256,7 +253,7 @@ class FBD_Block(Graphic_Element):
                 outputs = [output for output in blocktype["outputs"]]
                 if blocktype["extensible"]:
                     start = int(inputs[-1][0].replace("IN", ""))
-                    for dummy in xrange(self.Extension - len(blocktype["inputs"])):
+                    for dummy in range(self.Extension - len(blocktype["inputs"])):
                         start += 1
                         inputs.append(("IN%d" % start, inputs[-1][1], inputs[-1][2]))
                 comment = blocktype["comment"]

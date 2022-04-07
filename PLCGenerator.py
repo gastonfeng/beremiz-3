@@ -24,14 +24,10 @@
 
 
 from __future__ import absolute_import
-import re
-from functools import reduce
-from six.moves import xrange
 
 from plcopen import PLCOpenParser
 from plcopen.structures import *
 from plcopen.types_enums import *
-
 
 # Dictionary associating PLCOpen variable categories to the corresponding
 # IEC 61131-3 variable categories
@@ -65,7 +61,7 @@ def ReIndentText(text, nb_spaces):
             while lines[line_num][spaces] == " ":
                 spaces += 1
             indent = ""
-            for dummy in xrange(spaces, nb_spaces):
+            for dummy in range(spaces, nb_spaces):
                 indent += " "
             for line in lines:
                 if line != "":

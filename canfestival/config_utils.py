@@ -25,16 +25,18 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
+import getopt
 import os
 import sys
-import getopt
+
 from past.builtins import long
 
 # Translation between IEC types and Can Open types
 IECToCOType = {
-    "BOOL":    0x01,
-    "SINT":    0x02,
-    "INT":     0x03,
+    "BOOL": 0x01,
+    "SINT": 0x02,
+    "INT": 0x03,
     "DINT":    0x04,
     "LINT":    0x10,
     "USINT":   0x05,
@@ -85,7 +87,7 @@ def LE_to_BE(value, size):
     """
 
     data = ("%" + str(size * 2) + "." + str(size * 2) + "X") % value
-    list_car = [data[i:i+2] for i in xrange(0, len(data), 2)]
+    list_car = [data[i:i + 2] for i in range(0, len(data), 2)]
     list_car.reverse()
     return "".join([chr(int(car, 16)) for car in list_car])
 
