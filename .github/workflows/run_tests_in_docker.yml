@@ -1,0 +1,60 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ wxPython4 ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+          path: beremiz
+
+    - uses: actions/checkout@v3
+      with:
+          repository: beremiz/matiec
+          ref: 2a25f4dbf4e2b1e017a3a583db7dede4771fe523
+          path: matiec
+
+    - name: Cache docker image
+      id: cache-docker
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-docker
+      with:
+        path: /tmp/latest.tar
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('beremiz/tests/tools/Docker/beremiz-sikuli') }}
+
+    - if: ${{ steps.cache-docker.outputs.cache-hit == false }}
+      name: Create docker image
+      run: |
+        cd beremiz/tests/tools/Docker/beremiz-sikuli
+        ./build_docker_image.sh
+        docker image save --output="/tmp/latest.tar" beremiz_sikuli
+
+    - if: ${{ steps.cache-docker.outputs.cache-hit != false }}
+      name: Re-use docker image
+      run: |
+        docker image load --input="/tmp/latest.tar" 
+
+    - name: Create docker container
+      run: |
+        cd beremiz/tests/tools/Docker/beremiz-sikuli
+        ./create_docker_container.sh ${{ github.workspace }}/test
+        
+    - name: Run tests in docker
+      run: |
+        cd beremiz/tests/tools/Docker/beremiz-sikuli
+        ./build_in_docker.sh
+
+    - name: Upload test resuts artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: test_results
+        path: ${{ github.workspace }}/test
+        retention-days: 5
