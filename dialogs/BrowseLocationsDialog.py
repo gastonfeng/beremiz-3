@@ -54,7 +54,7 @@ def GetTypeFilterChoiceOptions():
 
 # turn LOCATIONDATATYPES inside-out
 LOCATION_SIZES = {}
-for size, types in LOCATIONDATATYPES.iteritems():
+for size, types in LOCATIONDATATYPES.items():
     for type in types:
         LOCATION_SIZES[type] = size
 
@@ -126,7 +126,7 @@ class BrowseLocationsDialog(wx.Dialog):
                                    flag=wx.GROW | wx.ALIGN_CENTER_VERTICAL)
 
         button_sizer = self.CreateButtonSizer(wx.OK | wx.CANCEL | wx.CENTRE)
-        self.Bind(wx.EVT_BUTTON, self.OnOK, id=self.GetAffirmativeId())
+        self.Bind(wx.EVT_BUTTON, self.OnOK, wx.FindWindowById(wx.ID_OK, self))
         button_gridsizer.Add(button_sizer, flag=wx.ALIGN_RIGHT)
 
         self.SetSizer(main_sizer)
@@ -204,7 +204,7 @@ class BrowseLocationsDialog(wx.Dialog):
                         item, root_cookie = self.LocationsTree.GetNextChild(root, root_cookie)
                 else:
                     self.LocationsTree.SetItemText(item, infos["name"])
-                self.LocationsTree.SetPyData(item, infos)
+                self.LocationsTree.SetItemData(item, infos)
                 self.LocationsTree.SetItemImage(item, self.TreeImageDict[infos["type"]])
                 self.GenerateLocationsTreeBranch(item, children)
                 item, root_cookie = self.LocationsTree.GetNextChild(root, root_cookie)
@@ -215,7 +215,7 @@ class BrowseLocationsDialog(wx.Dialog):
             self.LocationsTree.Delete(item)
 
     def OnLocationsTreeItemActivated(self, event):
-        infos = self.LocationsTree.GetPyData(event.GetItem())
+        infos = self.LocationsTree.GetItemData(event.GetItem())
         if infos["type"] not in [LOCATION_CONFNODE, LOCATION_MODULE, LOCATION_GROUP]:
             wx.CallAfter(self.EndModal, wx.ID_OK)
         event.Skip()
@@ -226,9 +226,10 @@ class BrowseLocationsDialog(wx.Dialog):
 
     def GetValues(self):
         selected = self.LocationsTree.GetSelection()
-        infos = self.LocationsTree.GetPyData(selected)
+        infos = self.LocationsTree.GetItemData(selected)
         if not self.do_rename:
             infos["var_name"] = None
+        infos['do_rename'] = self.do_rename
         return infos
 
     def OnOK(self, event):
@@ -237,7 +238,7 @@ class BrowseLocationsDialog(wx.Dialog):
         selected = self.LocationsTree.GetSelection()
         var_infos = None
         if selected.IsOk():
-            var_infos = self.LocationsTree.GetPyData(selected)
+            var_infos = self.LocationsTree.GetItemData(selected)
         if var_infos is None or var_infos["type"] in [LOCATION_CONFNODE, LOCATION_MODULE, LOCATION_GROUP]:
             dialog = wx.MessageDialog(self, _("A location must be selected!"), _("Error"), wx.OK | wx.ICON_ERROR)
             dialog.ShowModal()

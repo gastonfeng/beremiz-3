@@ -25,10 +25,8 @@
 
 from __future__ import absolute_import
 from __future__ import division
-from future.builtins import round
 
 import wx
-from six.moves import xrange
 
 from editors.Viewer import *
 
@@ -1190,7 +1188,7 @@ class LD_Viewer(Viewer):
 
     def RefreshRungs(self, movey, fromidx):
         if movey != 0:
-            for i in xrange(fromidx, len(self.Rungs)):
+            for i in range(fromidx, len(self.Rungs)):
                 self.RungComments[i].Move(0, movey)
                 self.RungComments[i].RefreshModel()
                 self.Rungs[i].Move(0, movey)

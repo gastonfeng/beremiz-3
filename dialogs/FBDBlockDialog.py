@@ -212,7 +212,7 @@ class FBDBlockDialog(BlockPreviewDialog):
         values["width"], values["height"] = self.Element.GetSize()
         values.update({
             name: control.GetValue()
-            for name, control in self.ParamsControl.iteritems()})
+            for name, control in self.ParamsControl.items()})
         return values
 
     def OnOK(self, event):

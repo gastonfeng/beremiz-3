@@ -25,10 +25,8 @@
 
 from __future__ import absolute_import
 from __future__ import division
-from future.builtins import round
 
 import wx
-from six.moves import xrange
 
 from graphics.GraphicCommons import *
 from graphics.DebugDataConsumer import DebugDataConsumer
@@ -1037,7 +1035,7 @@ class SFC_Transition(Graphic_Element, DebugDataConsumer):
             self.Condition.Draw(dc)
 
         if not getattr(dc, "printing", False):
-            for name, highlights in self.Highlights.iteritems():
+            for name, highlights in self.Highlights.items():
                 if name == "priority":
                     DrawHighlightedText(dc, str(self.Priority), highlights, priority_pos[0], priority_pos[1])
                 else:
@@ -1067,11 +1065,11 @@ class SFC_Divergence(Graphic_Element):
         if self.Type in [SELECTION_DIVERGENCE, SIMULTANEOUS_DIVERGENCE]:
             self.Inputs = [Connector(self, "", None, wx.Point(self.Size[0] // 2, 0), NORTH, onlyone=True)]
             self.Outputs = []
-            for i in xrange(number):
+            for i in range(number):
                 self.Outputs.append(Connector(self, "", None, wx.Point(i * SFC_DEFAULT_SEQUENCE_INTERVAL, self.Size[1]), SOUTH, onlyone=True))
         elif self.Type in [SELECTION_CONVERGENCE, SIMULTANEOUS_CONVERGENCE]:
             self.Inputs = []
-            for i in xrange(number):
+            for i in range(number):
                 self.Inputs.append(Connector(self, "", None, wx.Point(i * SFC_DEFAULT_SEQUENCE_INTERVAL, 0), NORTH, onlyone=True))
             self.Outputs = [Connector(self, "", None, wx.Point(self.Size[0] // 2, self.Size[1]), SOUTH, onlyone=True)]
         self.Value = None
@@ -2058,7 +2056,7 @@ class SFC_ActionBlock(Graphic_Element):
 
             if not getattr(dc, "printing", False):
                 action_highlights = self.Highlights.get(i, {})
-                for name, attribute_highlights in action_highlights.iteritems():
+                for name, attribute_highlights in action_highlights.items():
                     if name == "qualifier":
                         DrawHighlightedText(dc, action.qualifier, attribute_highlights, qualifier_pos[0], qualifier_pos[1])
                     elif name == "duration":

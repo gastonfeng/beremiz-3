@@ -85,7 +85,7 @@ def LE_to_BE(value, size):
     """
 
     data = ("%" + str(size * 2) + "." + str(size * 2) + "X") % value
-    list_car = [data[i:i+2] for i in xrange(0, len(data), 2)]
+    list_car = [data[i:i+2] for i in range(0, len(data), 2)]
     list_car.reverse()
     return "".join([chr(int(car, 16)) for car in list_car])
 
@@ -735,7 +735,7 @@ Options:
 
     # Extract workspace base folder
     base_folder = sys.path[0]
-    for i in xrange(3):
+    for i in range(3):
         base_folder = os.path.split(base_folder)[0]
     # Add CanFestival folder to search pathes
     sys.path.append(os.path.join(base_folder, "CanFestival-3", "objdictgen"))

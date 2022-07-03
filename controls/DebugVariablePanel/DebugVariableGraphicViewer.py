@@ -36,7 +36,7 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import _convert_agg_to_wx_bitmap
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from mpl_toolkits.mplot3d import Axes3D
-from six.moves import xrange
+from six.moves import range
 
 from editors.DebugViewer import REFRESH_PERIOD
 from controls.DebugVariablePanel.DebugVariableViewer import *
@@ -1027,7 +1027,7 @@ class DebugVariableGraphicViewer(DebugVariableViewer, FigureCanvas):
         # Graph type is parallel or orthogonal in 3D
         if self.GraphType == GRAPH_PARALLEL or self.Is3DCanvas():
             num_item = len(self.Items)
-            for idx in xrange(num_item):
+            for idx in range(num_item):
 
                 # Get color from color cycle (black if only one item)
                 color = ('k' if num_item == 1 else
@@ -1091,7 +1091,7 @@ class DebugVariableGraphicViewer(DebugVariableViewer, FigureCanvas):
         # Update position of items labels
         if self.GraphType == GRAPH_PARALLEL or self.Is3DCanvas():
             num_item = len(self.Items)
-            for idx in xrange(num_item):
+            for idx in range(num_item):
 
                 # In 3D graph items variable label are not displayed
                 if not self.Is3DCanvas():

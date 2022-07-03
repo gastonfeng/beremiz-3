@@ -32,7 +32,7 @@ import wx
 import wx.grid
 import wx.lib.buttons
 from six import string_types
-from six.moves import xrange
+from six.moves import range
 
 
 from plcopen.structures import LOCATIONDATATYPES, TestIdentifier, IEC_KEYWORDS, DefaultType
@@ -49,7 +49,7 @@ from util.TranslationCatalogs import NoTranslate
 # -------------------------------------------------------------------------------
 #                                 Helpers
 # -------------------------------------------------------------------------------
-
+_ = wx.GetTranslation
 
 [
     TITLE, EDITORTOOLBAR, FILEMENU, EDITMENU, DISPLAYMENU, PROJECTTREE,
@@ -123,7 +123,7 @@ class VariableTable(CustomTable):
         self.OPTIONS_DICT = dict([(_(option), option)
                                   for option in GetOptions()])
         self.VARIABLE_CLASSES_DICT = dict([(_(_class), _class)
-                                           for _class in GetFilterChoiceTransfer().itervalues()])
+                                           for _class in list(GetFilterChoiceTransfer().values())])
 
     def GetValueByName(self, row, colname):
         if row < self.GetNumberRows():
@@ -144,7 +144,7 @@ class VariableTable(CustomTable):
             if colname == "Type" and isinstance(value, tuple):
                 if value[0] == "array":
                     return "ARRAY [%s] OF %s" % (",".join(map("..".join, value[2])), value[1])
-            if not isinstance(value, string_types):
+            if not isinstance(value, str):
                 value = str(value)
             if colname in ["Class", "Option"]:
                 return _(value)
@@ -993,7 +993,7 @@ class VariablePanel(wx.Panel):
 
     def AddVariableHighlight(self, infos, highlight_type):
         if isinstance(infos[0], tuple):
-            for i in xrange(*infos[0]):
+            for i in range(*infos[0]):
                 self.Table.AddHighlight((i,) + infos[1:], highlight_type)
             cell_visible = infos[0][0]
         else:
@@ -1005,7 +1005,7 @@ class VariablePanel(wx.Panel):
 
     def RemoveVariableHighlight(self, infos, highlight_type):
         if isinstance(infos[0], tuple):
-            for i in xrange(*infos[0]):
+            for i in range(*infos[0]):
                 self.Table.RemoveHighlight((i,) + infos[1:], highlight_type)
         else:
             self.Table.RemoveHighlight(infos, highlight_type)

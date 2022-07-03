@@ -130,7 +130,7 @@ class SFCStepDialog(BlockPreviewDialog):
         values = {"name": self.StepName.GetValue()}
         values.update({
             name: control.IsChecked()
-            for name, control in self.ConnectorsCheckBox.iteritems()})
+            for name, control in self.ConnectorsCheckBox.items()})
         values["width"], values["height"] = self.Element.GetSize()
         return values
 
@@ -185,7 +185,7 @@ class SFCStepDialog(BlockPreviewDialog):
                                 self.Initial)
 
         # Update connectors of SFC step element according to check boxes value
-        for name, control in self.ConnectorsCheckBox.iteritems():
+        for name, control in self.ConnectorsCheckBox.items():
             if control.IsChecked():
                 getattr(self.Element, "Add" + name.capitalize())()
             else:

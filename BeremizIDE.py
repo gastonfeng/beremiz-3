@@ -35,7 +35,7 @@ import time
 from time import time as gettime
 from threading import Lock, Timer, currentThread
 
-from six.moves import cPickle, xrange
+from six.moves import cPickle, range
 import wx.lib.buttons
 import wx.lib.statbmp
 import wx.stc
@@ -608,7 +608,7 @@ class Beremiz(IDEFrame):
             elif answer == wx.ID_CANCEL:
                 return False
 
-        for idx in xrange(self.TabsOpened.GetPageCount()):
+        for idx in range(self.TabsOpened.GetPageCount()):
             window = self.TabsOpened.GetPage(idx)
             if not window.CheckSaveBeforeClosing():
                 return False
@@ -800,7 +800,7 @@ class Beremiz(IDEFrame):
             else:
                 panel = None
             if panel != self.LastPanelSelected:
-                for i in xrange(self.EditMenuSize, self.EditMenu.GetMenuItemCount()):
+                for i in range(self.EditMenuSize, self.EditMenu.GetMenuItemCount()):
                     item = self.EditMenu.FindItemByPosition(self.EditMenuSize)
                     if item is not None:
                         if item.IsSeparator():
@@ -818,7 +818,7 @@ class Beremiz(IDEFrame):
             if panel is not None:
                 panel.RefreshConfNodeMenu(self.EditMenu)
         else:
-            for i in xrange(self.EditMenuSize, self.EditMenu.GetMenuItemCount()):
+            for i in range(self.EditMenuSize, self.EditMenu.GetMenuItemCount()):
                 item = self.EditMenu.FindItemByPosition(i)
                 if item is not None:
                     if item.IsSeparator():
@@ -846,7 +846,7 @@ class Beremiz(IDEFrame):
         return cPickle.loads(str(self.Config.Read(entry_name, cPickle.dumps(default))))
 
     def ResetConnectionStatusBar(self):
-        for field in xrange(self.ConnectionStatusBar.GetFieldsCount()):
+        for field in range(self.ConnectionStatusBar.GetFieldsCount()):
             self.ConnectionStatusBar.SetStatusText('', field)
 
     def ResetView(self):

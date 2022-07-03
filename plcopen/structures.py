@@ -77,8 +77,8 @@ Inputs and outputs are a tuple of characteristics that are in order:
 StdBlckLibs = {libname: LoadProject(tc6fname)[0]
                for libname, tc6fname in StdTC6Libs}
 StdBlckLst = [{"name": libname, "list":
-               [GetBlockInfos(pous) for pous in lib.getpous()]}
-              for libname, lib in StdBlckLibs.iteritems()]
+    [GetBlockInfos(pous) for pous in lib.getpous()]}
+              for libname, lib in StdBlckLibs.items()]
 
 # -------------------------------------------------------------------------------
 #                             Test identifier
@@ -86,7 +86,7 @@ StdBlckLst = [{"name": libname, "list":
 
 IDENTIFIER_MODEL = re.compile(
     "(?:%(letter)s|_(?:%(letter)s|%(digit)s))(?:_?(?:%(letter)s|%(digit)s))*$" %
-    {"letter": "[a-zA-Z]", "digit": "[0-9]"})
+    {"letter": "[\u4e00-\u9fa5_a-zA-Z]", "digit": "[0-9]"})
 
 
 def TestIdentifier(identifier):
@@ -131,7 +131,7 @@ def get_standard_funtions_input_variables(table):
     fields = [True, True]
     while fields[1]:
         fields = table.pop(0)
-        variable_from_csv = dict([(champ, val) for champ, val in zip(variables, fields[1:]) if champ != ''])
+        variable_from_csv = dict([(champ, val) for champ, val in list(zip(variables, fields[1:])) if champ != ''])
         standard_funtions_input_variables[variable_from_csv['name']] = variable_from_csv['type']
     return standard_funtions_input_variables
 
@@ -148,7 +148,7 @@ def csv_input_translate(str_decl, variables, base):
     len_of_not_predifined_variable = len([True for param_type in decl if param_type not in variables])
 
     for param_type in decl:
-        if param_type in variables.keys():
+        if param_type in list(variables.keys()):
             param_name = param_type
             param_type = variables[param_type]
         elif len_of_not_predifined_variable > 1:
@@ -199,10 +199,10 @@ def get_standard_funtions(table):
                 Current_section = {"name": section_name, "list": []}
                 Standard_Functions_Decl.append(Current_section)
             if Current_section:
-                Function_decl = dict([(champ, val) for champ, val in zip(fonctions, fields[1:]) if champ])
+                Function_decl = dict([(champ, val) for champ, val in list(zip(fonctions, fields[1:])) if champ])
                 baseinputnumber = int(Function_decl.get("baseinputnumber", 1))
                 Function_decl["baseinputnumber"] = baseinputnumber
-                for param, value in Function_decl.iteritems():
+                for param, value in Function_decl.items():
                     if param in translate:
                         Function_decl[param] = translate[param](value)
                 Function_decl["type"] = "function"
@@ -250,13 +250,13 @@ def get_standard_funtions(table):
                         store = True
                         for (InTypes, OutTypes) in ANY_TO_ANY_FILTERS.get(filter_name, []):
                             outs = reduce(lambda a, b: a or b,
-                                          map(lambda testtype: IsOfType(
+                                          list(map(lambda testtype: IsOfType(
                                               Function_decl["outputs"][0][1],
-                                              testtype), OutTypes))
+                                              testtype), OutTypes)))
                             inps = reduce(lambda a, b: a or b,
-                                          map(lambda testtype: IsOfType(
+                                          list(map(lambda testtype: IsOfType(
                                               Function_decl["inputs"][0][1],
-                                              testtype), InTypes))
+                                              testtype), InTypes)))
                             if inps and outs and Function_decl["outputs"][0][1] != Function_decl["inputs"][0][1]:
                                 store = True
                                 break
@@ -307,8 +307,9 @@ for category in StdBlckLst:
 # Keywords for Type Declaration
 TYPE_BLOCK_START_KEYWORDS = ["TYPE", "STRUCT"]
 TYPE_BLOCK_END_KEYWORDS = ["END_TYPE", "END_STRUCT"]
-TYPE_KEYWORDS = ["ARRAY", "OF", "T", "D", "TIME_OF_DAY", "DATE_AND_TIME"] + TYPE_BLOCK_START_KEYWORDS + TYPE_BLOCK_END_KEYWORDS
-TYPE_KEYWORDS.extend([keyword for keyword in TypeHierarchy.keys() if keyword not in TYPE_KEYWORDS])
+TYPE_KEYWORDS = ["ARRAY", "OF", "T", "D", "TIME_OF_DAY",
+                 "DATE_AND_TIME"] + TYPE_BLOCK_START_KEYWORDS + TYPE_BLOCK_END_KEYWORDS
+TYPE_KEYWORDS.extend([keyword for keyword in list(TypeHierarchy.keys()) if keyword not in TYPE_KEYWORDS])
 
 
 # Keywords for Variable Declaration

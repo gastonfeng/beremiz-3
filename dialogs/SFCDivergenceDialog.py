@@ -126,7 +126,7 @@ class SFCDivergenceDialog(BlockPreviewDialog):
         """
         # Go through radio buttons and return type associated to the one that
         # is selected
-        for type, control in self.TypeRadioButtons.iteritems():
+        for type, control in self.TypeRadioButtons.items():
             if control.GetValue():
                 return type
         return None

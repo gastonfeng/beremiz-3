@@ -26,7 +26,7 @@
 from __future__ import absolute_import
 import re
 from functools import reduce
-from six.moves import xrange
+from six.moves import range
 
 from plcopen import PLCOpenParser
 from plcopen.structures import *
@@ -65,7 +65,7 @@ def ReIndentText(text, nb_spaces):
             while lines[line_num][spaces] == " ":
                 spaces += 1
             indent = ""
-            for dummy in xrange(spaces, nb_spaces):
+            for dummy in range(spaces, nb_spaces):
                 indent += " "
             for line in lines:
                 if line != "":

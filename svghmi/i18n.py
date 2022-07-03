@@ -119,7 +119,7 @@ def MatchTranslations(translations, messages, errcallback):
         langs.append((langname,langcode))
 
         broken = False
-        for msgid, msg in translation.iteritems():
+        for msgid, msg in translation.items():
             broken = True
             errcallback(_('{}: Unused translation "{}":"{}"\n').format(langcode,msgid,msg))
         if broken or langcode in broken_lang:

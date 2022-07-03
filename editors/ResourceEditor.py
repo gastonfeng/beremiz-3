@@ -27,7 +27,7 @@ from __future__ import absolute_import
 import wx
 import wx.lib.buttons
 import wx.grid
-from six.moves import xrange
+from six.moves import range
 
 from graphics.GraphicCommons import REFRESH_HIGHLIGHT_PERIOD, ERROR_HIGHLIGHT
 from controls import CustomGrid, CustomTable, DurationCellEditor
@@ -198,7 +198,7 @@ class ResourceTable(CustomTable):
         if highlight_type is None:
             self.Highlights = {}
         else:
-            for _row, row_highlights in self.Highlights.iteritems():
+            for _row, row_highlights in self.Highlights.items():
                 row_items = row_highlights.items()
                 for col, col_highlights in row_items:
                     if highlight_type in col_highlights:
@@ -404,7 +404,7 @@ class ResourceEditor(EditorPanel):
 
     def RefreshTaskList(self):
         self.TaskList = []
-        for row in xrange(self.TasksTable.GetNumberRows()):
+        for row in range(self.TasksTable.GetNumberRows()):
             self.TaskList.append(self.TasksTable.GetValueByName(row, "Name"))
 
     def RefreshVariableList(self):
@@ -474,14 +474,14 @@ class ResourceEditor(EditorPanel):
                 return
 
             tasklist = [name for name in self.TaskList if name != ""]
-            for i in xrange(self.TasksTable.GetNumberRows()):
+            for i in range(self.TasksTable.GetNumberRows()):
                 task = self.TasksTable.GetValueByName(i, "Name")
                 if task in tasklist:
                     tasklist.remove(task)
             if len(tasklist) > 0:
                 old_name = tasklist[0].upper()
                 new_name = self.TasksTable.GetValue(row, col)
-                for i in xrange(self.InstancesTable.GetNumberRows()):
+                for i in range(self.InstancesTable.GetNumberRows()):
                     name = self.InstancesTable.GetValueByName(i, "Task").upper()
                     if old_name == name:
                         self.InstancesTable.SetValueByName(i, "Task", new_name)

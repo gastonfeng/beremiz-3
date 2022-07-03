@@ -274,7 +274,7 @@ class SearchResultPanel(wx.Panel):
             item_name = infos["name"]
 
         self.SearchResultsTree.SetItemText(root, item_name)
-        self.SearchResultsTree.SetPyData(root, infos["data"])
+        self.SearchResultsTree.SetItemData(root, infos["data"])
         self.SearchResultsTree.SetItemBackgroundColour(root, wx.WHITE)
         self.SearchResultsTree.SetItemTextColour(root, wx.BLACK)
         if infos["type"] is not None:
@@ -320,7 +320,7 @@ class SearchResultPanel(wx.Panel):
             item, root_cookie = self.SearchResultsTree.GetNextChild(root, root_cookie)
 
     def ShowSearchResults(self, item):
-        data = self.SearchResultsTree.GetPyData(item)
+        data = self.SearchResultsTree.GetItemData(item)
         if isinstance(data, tuple):
             search_results = [data]
         else:

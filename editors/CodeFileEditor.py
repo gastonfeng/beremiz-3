@@ -32,7 +32,7 @@ import wx
 import wx.grid
 import wx.stc as stc
 import wx.lib.buttons
-from six.moves import xrange
+from six.moves import range
 
 
 from plcopen.plcopen import TestTextElement
@@ -285,7 +285,7 @@ class CodeEditor(CustomStyledTextCtrl):
     def RefreshSectionStyling(self):
         self.Colourise(0, -1)
 
-        for line in xrange(self.GetLineCount()):
+        for line in range(self.GetLineCount()):
             self.SetLineState(line, 0)
 
         doc_end_pos = self.GetLength()

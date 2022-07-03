@@ -648,7 +648,7 @@ class _EthercatCFileGenerator(object):
                                 category_infos["max_index"] = max_index
                                 break
 
-                    for (index, subindex), entry_declaration in slave_variables.iteritems():
+                    for (index, subindex), entry_declaration in slave_variables.items():
 
                         if not entry_declaration["mapped"]:
                             entry = device_entries.get((index, subindex), None)
@@ -750,7 +750,7 @@ class _EthercatCFileGenerator(object):
 
                 str_completion["pdos_configuration_declaration"] += SLAVE_PDOS_CONFIGURATION_DECLARATION % pdos_infos
             
-            #for (index, subindex), entry_declaration in slave_variables.iteritems():
+            #for (index, subindex), entry_declaration in slave_variables.items():
             #    if not entry_declaration["mapped"]:
             #        message = _("Entry index 0x%4.4x, subindex 0x%2.2x not mapped for device %s") % \
             #                        (index, subindex, type_infos["device_type"])

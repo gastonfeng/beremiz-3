@@ -346,7 +346,7 @@ class WebInterface(athena.LivePage):
         return self.MainPage.getHMI()
 
     def LoadHMI(self, hmi, jsmodules):
-        for name, path in jsmodules.iteritems():
+        for name, path in jsmodules.items():
             self.jsModules.mapping[name] = os.path.join(WorkingDir, path)
         self.MainPage.setPLCStartedHMI(hmi)
 

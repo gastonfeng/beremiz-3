@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
-from six.moves import xrange
+from six.moves import range
 
 # dictionary implementing:
 # key   - string with the description we want in the request plugin GUI
@@ -64,7 +64,7 @@ def GetTCPServerNodePrinted(self, child):
     if host == "#ANY#":
         host = ''
     # slaveid = GetCTVal(child, 2)
-    # if int(slaveid) not in xrange(256):
+    # if int(slaveid) not in range(256):
         # self.GetCTRoot().logger.write_error("Error: Wrong slave ID in %s server node\nModbus Plugin C code returns empty\n"%location)
         # return None
 
@@ -90,16 +90,16 @@ def GetTCPServerMemAreaPrinted(self, child, nodeid):
     request_dict["locreqstr"] = "_".join(map(str, child.GetCurrentLocation()))
     request_dict["nodeid"] = str(nodeid)
     request_dict["address"] = GetCTVal(child, 2)
-    if int(request_dict["address"]) not in xrange(65536):
+    if int(request_dict["address"]) not in range(65536):
         self.GetCTRoot().logger.write_error(
             "Modbus plugin: Invalid Start Address in server memory area node %(locreqstr)s (Must be in the range [0..65535])\nModbus plugin: Aborting C code generation for this node\n" % request_dict)
         return None
     request_dict["count"] = GetCTVal(child, 1)
-    if int(request_dict["count"]) not in xrange(1, 65537):
+    if int(request_dict["count"]) not in range(1, 65537):
         self.GetCTRoot().logger.write_error(
             "Modbus plugin: Invalid number of channels in server memory area node %(locreqstr)s (Must be in the range [1..65536-start_address])\nModbus plugin: Aborting C code generation for this node\n" % request_dict)
         return None
-    if (int(request_dict["address"]) + int(request_dict["count"])) not in xrange(1, 65537):
+    if (int(request_dict["address"]) + int(request_dict["count"])) not in range(1, 65537):
         self.GetCTRoot().logger.write_error(
             "Modbus plugin: Invalid number of channels in server memory area node %(locreqstr)s (Must be in the range [1..65536-start_address])\nModbus plugin: Aborting C code generation for this node\n" % request_dict)
         return None
@@ -209,19 +209,19 @@ DEF_REQ_SEND_RETRIES, 0 /* mb_error_code */, 0 /* tn_error_code */, 0 /* prev_co
         "iotype": modbus_function_dict[GetCTVal(child, 0)][1],
         "maxcount": modbus_function_dict[GetCTVal(child, 0)][2]}
 
-    if int(request_dict["slaveid"]) not in xrange(256):
+    if int(request_dict["slaveid"]) not in range(256):
         self.GetCTRoot().logger.write_error(
             "Modbus plugin: Invalid slaveID in TCP client request node %(locreqstr)s (Must be in the range [0..255])\nModbus plugin: Aborting C code generation for this node\n" % request_dict)
         return None
-    if int(request_dict["address"]) not in xrange(65536):
+    if int(request_dict["address"]) not in range(65536):
         self.GetCTRoot().logger.write_error(
             "Modbus plugin: Invalid Start Address in TCP client request node %(locreqstr)s (Must be in the range [0..65535])\nModbus plugin: Aborting C code generation for this node\n" % request_dict)
         return None
-    if int(request_dict["count"]) not in xrange(1, 1 + int(request_dict["maxcount"])):
+    if int(request_dict["count"]) not in range(1, 1 + int(request_dict["maxcount"])):
         self.GetCTRoot().logger.write_error(
             "Modbus plugin: Invalid number of channels in TCP client request node %(locreqstr)s (Must be in the range [1..%(maxcount)s])\nModbus plugin: Aborting C code generation for this node\n" % request_dict)
         return None
-    if (int(request_dict["address"]) + int(request_dict["count"])) not in xrange(1, 65537):
+    if (int(request_dict["address"]) + int(request_dict["count"])) not in range(1, 65537):
         self.GetCTRoot().logger.write_error(
             "Modbus plugin: Invalid number of channels in TCP client request node %(locreqstr)s (start_address + nr_channels must be less than 65536)\nModbus plugin: Aborting C code generation for this node\n" % request_dict)
         return None

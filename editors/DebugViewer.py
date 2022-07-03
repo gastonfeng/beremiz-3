@@ -130,7 +130,7 @@ class DebugViewer(object):
         @param inhibit: Inhibit flag
         """
         # Inhibit every data consumers in list
-        for consumer, _iec_path in self.DataConsumers.iteritems():
+        for consumer, _iec_path in self.DataConsumers.items():
             consumer.Inhibit(inhibit)
 
         # Save inhibit flag
@@ -192,7 +192,7 @@ class DebugViewer(object):
                 self.DataProducer.UnsubscribeDebugIECVariable("__tick__", self)
 
             # Unsubscribe all data consumers in list
-            for consumer, iec_path in self.DataConsumers.iteritems():
+            for consumer, iec_path in self.DataConsumers.items():
                 self.DataProducer.UnsubscribeDebugIECVariable(iec_path, consumer)
 
         self.DataConsumers = {}

@@ -463,8 +463,8 @@ class OPCUAClientModel(dict):
     def LoadCSV(self,path):
         with open(path, 'rb') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-            buf = {direction:[] for direction, _model in self.iteritems()}
-            for direction, model in self.iteritems():
+            buf = {direction:[] for direction, _model in self.items()}
+            for direction, model in self.items():
                 self[direction][:] = []
             for row in reader:
                 direction = row[0]
@@ -472,7 +472,7 @@ class OPCUAClientModel(dict):
 
     def SaveCSV(self,path):
         with open(path, 'wb') as csvfile:
-            for direction, data in self.iteritems():
+            for direction, data in self.items():
                 writer = csv.writer(csvfile, delimiter=',',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 for row in data:
@@ -557,7 +557,7 @@ void __publish_%(locstr)s(void)
             retrieve = "",
             publish  = "" 
         )
-        for direction, data in self.iteritems():
+        for direction, data in self.items():
             iec_direction_prefix = {"input": "__I", "output": "__Q"}[direction]
             for row in data:
                 name, ua_nsidx, ua_nodeid_type, _ua_node_id, ua_type, iec_number = row

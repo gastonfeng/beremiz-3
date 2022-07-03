@@ -117,7 +117,7 @@ class LDElementDialog(BlockPreviewDialog):
         self.RefreshVariableList()
 
         # Set values in ElementVariable
-        for name, (var_type, value_type) in self.VariableList.iteritems():
+        for name, (var_type, value_type) in self.VariableList.items():
             # Only select BOOL variable and avoid input for coil
             if (type == "contact" or var_type != "Input") and \
                value_type == "BOOL":
@@ -134,7 +134,7 @@ class LDElementDialog(BlockPreviewDialog):
         """
         # Go through radio buttons and return modifier associated to the one
         # that is selected
-        for modifier, control in self.ModifierRadioButtons.iteritems():
+        for modifier, control in self.ModifierRadioButtons.items():
             if control.GetValue():
                 return modifier
         return None

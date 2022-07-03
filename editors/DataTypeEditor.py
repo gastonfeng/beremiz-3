@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import
 import re
-from six.moves import xrange
+from six.moves import range
 
 import wx
 import wx.grid
@@ -239,7 +239,7 @@ class DataTypeEditor(EditorPanel):
         subrange_panel_sizer.Add(self.SubrangeMinimum, 1, border=5,
                                        flag=wx.GROW | wx.ALL)
 
-        for dummy in xrange(2):
+        for dummy in range(2):
             subrange_panel_sizer.Add(wx.Size(0, 0), 1)
 
         subrange_maximum_label = wx.StaticText(self.SubrangePanel,
@@ -788,7 +788,7 @@ class DataTypeEditor(EditorPanel):
                 control.SetStyle(0, len(value), wx.TextAttr(wx.NullColour))
             elif isinstance(control, wx.adv.EditableListBox):
                 listctrl = control.GetListCtrl()
-                for i in xrange(listctrl.GetItemCount()):
+                for i in range(listctrl.GetItemCount()):
                     listctrl.SetItemBackgroundColour(i, wx.NullColour)
                     listctrl.SetItemTextColour(i, wx.NullColour)
         self.StructureElementsTable.ClearHighlights(highlight_type)

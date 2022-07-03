@@ -18,7 +18,7 @@ class XSLTransform(object):
             extensions={("beremiz", name): call for name, call in xsltext})
 
     def transform(self, root, profile_run=False, **kwargs):
-        res = self.xslt(root, profile_run=profile_run, **{k: etree.XSLT.strparam(v) for k, v in kwargs.iteritems()})
+        res = self.xslt(root, profile_run=profile_run, **{k: etree.XSLT.strparam(v) for k, v in kwargs.items()})
         # print(self.xslt.error_log)
         return res
 

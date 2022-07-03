@@ -40,9 +40,7 @@ import hashlib
 from datetime import datetime
 from weakref import WeakKeyDictionary
 from functools import reduce
-from itertools import izip
 from distutils.dir_util import copy_tree
-from six.moves import xrange
 
 import wx
 
@@ -1113,7 +1111,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
                 "retrieve_calls": "\n    ".join([
                     "__retrieve_%s();" % locstr for locstr in locstrs]),
                 "publish_calls": "\n    ".join([  # Call publish in reverse order
-                    "__publish_%s();" % locstrs[i - 1] for i in xrange(len(locstrs), 0, -1)]),
+                    "__publish_%s();" % locstrs[i - 1] for i in range(len(locstrs), 0, -1)]),
                 "init_calls": "\n    ".join([
                     "init_level=%d; " % (i + 1) +
                     "if((res = __init_%s(argc,argv))){" % locstr +
@@ -1121,7 +1119,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
                     "return res;}" for i, locstr in enumerate(locstrs)]),
                 "cleanup_calls": "\n    ".join([
                     "if(init_level >= %d) " % i +
-                    "__cleanup_%s();" % locstrs[i - 1] for i in xrange(len(locstrs), 0, -1)])
+                    "__cleanup_%s();" % locstrs[i - 1] for i in range(len(locstrs), 0, -1)])
             }
         else:
             plc_main_code = targets.GetCode("plc_main_head.c") % {
@@ -1570,7 +1568,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
 
 
         buffers, self.DebugValuesBuffers = (self.DebugValuesBuffers,
-                                            [list() for dummy in xrange(len(self.TracedIECPath))])
+                                            [list() for dummy in range(len(self.TracedIECPath))])
 
         ticks, self.DebugTicks = self.DebugTicks, []
 
@@ -1591,7 +1589,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
         self.TracedIECTypes = []
         if self._connector is not None and self.debug_status != PlcStatus.Broken:
             IECPathsToPop = []
-            for IECPath, data_tuple in self.IECdebug_datas.iteritems():
+            for IECPath, data_tuple in self.IECdebug_datas.items():
                 WeakCallableDict, _data_log, _status, fvalue, _buffer_list = data_tuple
                 if len(WeakCallableDict) == 0:
                     # Callable Dict is empty.
@@ -1719,7 +1717,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
         if data_tuple is not None:
             WeakCallableDict, _data_log, _status, _fvalue, buffer_list = data_tuple
             # data_log.append((debug_tick, value))
-            for weakcallable, buffer_list in WeakCallableDict.iteritems():
+            for weakcallable, buffer_list in WeakCallableDict.items():
                 function = getattr(weakcallable, function_name, None)
                 if function is not None:
                     if buffer_list:

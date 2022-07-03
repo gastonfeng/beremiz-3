@@ -30,7 +30,7 @@ from functools import reduce
 
 import wx
 import wx.stc
-from six.moves import xrange
+from six.moves import range
 
 from graphics.GraphicCommons import ERROR_HIGHLIGHT, SEARCH_RESULT_HIGHLIGHT, REFRESH_HIGHLIGHT_PERIOD
 from plcopen.structures import ST_BLOCK_START_KEYWORDS, IEC_BLOCK_START_KEYWORDS, LOCATIONDATATYPES
@@ -43,9 +43,9 @@ from controls.CustomStyledTextCtrl import CustomStyledTextCtrl, faces, GetCursor
 
 
 NEWLINE = "\n"
-NUMBERS = [str(i) for i in xrange(10)]
+NUMBERS = [str(i) for i in range(10)]
 LETTERS = ['_']
-for i in xrange(26):
+for i in range(26):
     LETTERS.append(chr(ord('a') + i))
     LETTERS.append(chr(ord('A') + i))
 

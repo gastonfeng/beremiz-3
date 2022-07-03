@@ -29,8 +29,8 @@ import sys
 from builtins import str as text
 
 def AbsFile(file):
-    if isinstance(file, str):
-        file = text(file, sys.getfilesystemencoding())
+    # if isinstance(file, str):
+    #     file = text(file, sys.getfilesystemencoding())
     return file
 
 

@@ -556,10 +556,10 @@ for mapping needed location variables
         if self.Library is None:
             self.LoadModules()
         library = []
-        for vendor_id, vendor in self.Library.iteritems():
+        for vendor_id, vendor in self.Library.items():
             groups = []
             children_dict = {}
-            for group_type, group in vendor["groups"].iteritems():
+            for group_type, group in vendor["groups"].items():
                 group_infos = {"name": group["name"],
                                "order": group["order"],
                                "type": ETHERCAT_GROUP,
@@ -607,7 +607,7 @@ for mapping needed location variables
         vendor = ExtractHexDecValue(module_infos["vendor"])
         vendor_infos = self.Library.get(vendor)
         if vendor_infos is not None:
-            for _group_name, group_infos in vendor_infos["groups"].iteritems():
+            for _group_name, group_infos in vendor_infos["groups"].items():
                 for device_type, device_infos in group_infos["devices"]:
                     product_code = ExtractHexDecValue(device_infos.getType().getProductCode())
                     revision_number = ExtractHexDecValue(device_infos.getType().getRevisionNo())
@@ -623,7 +623,7 @@ for mapping needed location variables
         vendor = ExtractHexDecValue(module_infos["vendor"])
         vendor_infos = self.Library.get(vendor)
         if vendor_infos is not None:
-            for group_name, group_infos in vendor_infos["groups"].iteritems():
+            for group_name, group_infos in vendor_infos["groups"].items():
                 return group_infos["modules"]
                 #for device_type, module_list, idx_inc, slot_inc in group_infos["modules"]:
                 #    return module_list, idx_inc, slot_inc
@@ -666,7 +666,7 @@ for mapping needed location variables
         extra_params = [param for param, _params_infos in self.MODULES_EXTRA_PARAMS]
         writer = csv.writer(csvfile, delimiter=';')
         writer.writerow(['Vendor', 'product_code', 'revision_number'] + extra_params)
-        for (vendor, product_code, revision_number), module_extra_params in self.ModulesExtraParams.iteritems():
+        for (vendor, product_code, revision_number), module_extra_params in self.ModulesExtraParams.items():
             writer.writerow([vendor, product_code, revision_number] +
                             [module_extra_params.get(param, '')
                              for param in extra_params])

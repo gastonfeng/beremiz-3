@@ -26,9 +26,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from math import *
-from future.builtins import round
 from six import string_types
-from six.moves import xrange
 
 import wx
 from graphics.ToolTipProducer import ToolTipProducer
@@ -99,8 +97,8 @@ VALID_HANDLES = [(1, 1), (1, 2), (1, 3), (2, 3), (3, 3), (3, 2), (3, 1), (2, 1)]
 HIGHLIGHTCOLOR = wx.CYAN
 
 # Define highlight types
-ERROR_HIGHLIGHT = (wx.Colour(255, 255, 0), wx.RED)
-SEARCH_RESULT_HIGHLIGHT = (wx.Colour(255, 165, 0), wx.WHITE)
+ERROR_HIGHLIGHT = ((255, 255, 0), (255, 0, 0))
+SEARCH_RESULT_HIGHLIGHT = ((255, 165, 0), (255, 255, 255))
 
 # Define highlight refresh inhibition period in second
 REFRESH_HIGHLIGHT_PERIOD = 0.1
@@ -1918,7 +1916,7 @@ class Wire(Graphic_Element, DebugDataConsumer):
     # Returns if the point given is on one of the wire segments
     def HitTest(self, pt, connectors=True):
         test = False
-        for i in xrange(len(self.Points) - 1):
+        for i in range(len(self.Points) - 1):
             rect = wx.Rect(0, 0, 0, 0)
             if i == 0 and self.StartConnected is not None:
                 x1 = self.Points[i].x - self.Segments[0][0] * CONNECTOR_SIZE
@@ -1953,7 +1951,7 @@ class Wire(Graphic_Element, DebugDataConsumer):
 
     # Returns the wire segment if the point given is on it
     def TestSegment(self, pt, all=False):
-        for i in xrange(len(self.Segments)):
+        for i in range(len(self.Segments)):
             # If wire is not in a Ladder Diagram, first and last segments are excluded
             if all or 0 < i < len(self.Segments) - 1:
                 x1, y1 = self.Points[i].x, self.Points[i].y
@@ -2233,7 +2231,7 @@ class Wire(Graphic_Element, DebugDataConsumer):
         i = 1
         while i < len(points) - 1:
             if points[i] == points[i + 1] and segments[i - 1] == segments[i + 1]:
-                for dummy in xrange(2):
+                for dummy in range(2):
                     points.pop(i)
                     segments.pop(i)
             else:
@@ -2459,7 +2457,7 @@ class Wire(Graphic_Element, DebugDataConsumer):
         handle_type, handle = self.Handle
         if handle_type == HANDLE_SEGMENT:
             segment, _dir = handle
-            for dummy in xrange(2):
+            for dummy in range(2):
                 self.Points.pop(segment)
                 self.Segments.pop(segment)
             self.GeneratePoints()

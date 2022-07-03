@@ -27,7 +27,7 @@ from __future__ import absolute_import
 import os
 
 import wx
-from six.moves import xrange
+from six.moves import range
 
 from util.BitmapLibrary import GetBitmap
 
@@ -99,7 +99,7 @@ class FolderTree(wx.Panel):
         self.Filters = {}
         if self.Filter is not None:
             filter_parts = filter.split("|")
-            for idx in xrange(0, len(filter_parts), 2):
+            for idx in range(0, len(filter_parts), 2):
                 if filter_parts[idx + 1] == "*.*":
                     self.Filters[filter_parts[idx]] = ""
                 else:
@@ -115,7 +115,7 @@ class FolderTree(wx.Panel):
     def _GetFolderChildren(self, folderpath, recursive=True):
         items = []
         if wx.Platform == '__WXMSW__' and folderpath == "/":
-            for c in xrange(ord('a'), ord('z')):
+            for c in range(ord('a'), ord('z')):
                 drive = os.path.join("%s:\\" % chr(c))
                 if os.path.exists(drive):
                     items.append((drive, DRIVE, self._GetFolderChildren(drive, False)))

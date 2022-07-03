@@ -29,7 +29,7 @@ from __future__ import division
 import re
 from collections import OrderedDict
 
-from six.moves import xrange
+from six.moves import range
 from lxml import etree
 
 from xmlclass import *
@@ -214,7 +214,7 @@ PLCOpen_v1_file.close()
 PLCOpen_v1_xml = PLCOpen_v1_xml.replace(
     "http://www.plcopen.org/xml/tc6.xsd",
     "http://www.plcopen.org/xml/tc6_0201")
-PLCOpen_v1_xsd = etree.XMLSchema(etree.fromstring(PLCOpen_v1_xml))
+PLCOpen_v1_xsd = etree.XMLSchema(etree.fromstring(PLCOpen_v1_xml.encode()))
 
 # XPath for file compatibility process
 ProjectResourcesXPath = PLCOpen_XPath("ppx:instances/ppx:configurations/ppx:configuration/ppx:resource")
@@ -304,7 +304,7 @@ def LoadProjectXML(project_xml):
 
 
 def LoadProject(filepath):
-    project_file = open(filepath)
+    project_file = open(filepath, encoding='utf-8')
     project_xml = project_file.read()
     project_file.close()
     return LoadProjectXML(project_xml)
@@ -335,11 +335,11 @@ def SaveProject(project, filepath):
         project,
         pretty_print=True,
         xml_declaration=True,
-        encoding='utf-8')
+        encoding='utf-8').decode()
 
     assert len(content) != 0
         
-    project_file = open(filepath, 'w')
+    project_file = open(filepath, 'w', encoding='utf-8')
     project_file.write(content)
     project_file.close()
 
@@ -440,7 +440,7 @@ def _updateProjectClass(cls):
 
     def setcontentHeader(self, contentheader):
         contentheader_obj = self.contentHeader
-        for attr, value in contentheader.iteritems():
+        for attr, value in contentheader.items():
             func = {"projectName": contentheader_obj.setname,
                     "projectVersion": contentheader_obj.setversion,
                     "authorName": contentheader_obj.setauthor,
@@ -495,7 +495,7 @@ def _updateProjectClass(cls):
             "ppx:types/ppx:pous/ppx:pou%s%s" %
             (("[@name!='%s']" % exclude) if exclude is not None else '',
              ("[%s]" % " or ".join(
-                 map(lambda x: "@pouType='%s'" % x, filter)))
+                 list(map(lambda x: "@pouType='%s'" % x, filter))))
              if len(filter) > 0 else ""),
             namespaces=PLCOpenParser.NSMAP)
     setattr(cls, "getpous", getpous)
@@ -749,7 +749,7 @@ def _updateConfigurationResourceElementAddress(self, address_model, new_leading)
 def _removeConfigurationResourceVariableByAddress(self, address):
     for varlist in self.getglobalVars():
         variables = varlist.getvariable()
-        for i in xrange(len(variables)-1, -1, -1):
+        for i in range(len(variables) - 1, -1, -1):
             if variables[i].getaddress() == address:
                 variables.remove(variables[i])
 
@@ -757,7 +757,7 @@ def _removeConfigurationResourceVariableByAddress(self, address):
 def _removeConfigurationResourceVariableByFilter(self, address_model):
     for varlist in self.getglobalVars():
         variables = varlist.getvariable()
-        for i in xrange(len(variables)-1, -1, -1):
+        for i in range(len(variables) - 1, -1, -1):
             var_address = variables[i].getaddress()
             if var_address is not None:
                 result = address_model.match(var_address)

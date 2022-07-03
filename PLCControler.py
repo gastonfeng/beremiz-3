@@ -32,7 +32,6 @@ import re
 import datetime
 from time import localtime
 from functools import reduce
-from future.builtins import round
 
 import util.paths as paths
 from plcopen import *
@@ -74,7 +73,7 @@ class UndoBuffer(object):
             self.MinIndex = 0
             self.MaxIndex = 0
         # Initialising buffer with currentstate at the first place
-        for i in xrange(UNDO_BUFFER_LENGTH):
+        for i in range(UNDO_BUFFER_LENGTH):
             if i == 0:
                 self.Buffer.append(currentstate)
             else:
@@ -1240,7 +1239,7 @@ class PLCControler(object):
         if project is not None and words[0] in ["P", "T", "A"]:
             name = words[1]
         blocktypes = []
-        for blocks in self.TotalTypesDict.itervalues():
+        for blocks in list(self.TotalTypesDict.values()):
             for _sectioname, block in blocks:
                 if block["type"] == "functionBlock":
                     blocktypes.append(block["name"])
@@ -1295,7 +1294,7 @@ class PLCControler(object):
             result = project.getpou(typename)
             if result is not None:
                 return result
-        for standardlibrary in StdBlckLibs.values():
+        for standardlibrary in list(PLCGenerator.StdBlckLibs.values()):
             result = standardlibrary.getpou(typename)
             if result is not None:
                 return result
@@ -1448,7 +1447,7 @@ class PLCControler(object):
 
     # Return Subrange types
     def GetSubrangeBaseTypes(self, exclude, debug=False):
-        subrange_basetypes = DataTypeRange.keys()
+        subrange_basetypes = list(PLCGenerator.DataTypeRange.keys())
         project = self.GetProject(debug)
         if project is not None:
             subrange_basetypes.extend(
@@ -1963,9 +1962,9 @@ class PLCControler(object):
                 new_pos[0] -= width // 2
                 new_pos[1] -= height // 2
             else:
-                new_pos = map(lambda x: x + 30, new_pos)
+                new_pos = list(map(lambda xx: xx + 30, new_pos))
             if scaling[0] != 0 and scaling[1] != 0:
-                min_pos = map(lambda x: 30 / x, scaling)
+                min_pos = list(map(lambda xx: 30 / xx, scaling))
                 minx = round(min_pos[0])
                 if int(min_pos[0]) == round(min_pos[0]):
                     minx += 1
