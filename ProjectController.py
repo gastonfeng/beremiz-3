@@ -1224,6 +1224,13 @@ class ProjectController(ConfigTreeNode, PLCControler):
             self.logger.write_error(traceback.format_exc())
             return False
 
+        # Extensions also need plcCFLAGS in case they include beremiz.h
+        CTNLocationCFilesAndCFLAGS = [
+            (loc, [
+                (code, self.plcCFLAGS+" "+cflags)
+                for code,cflags in code_and_cflags], do_calls)
+            for loc, code_and_cflags, do_calls in CTNLocationCFilesAndCFLAGS]
+
         self.LocationCFilesAndCFLAGS = LibCFilesAndCFLAGS + \
             CTNLocationCFilesAndCFLAGS
         self.LDFLAGS = CTNLDFLAGS + LibLDFLAGS
@@ -1576,12 +1583,16 @@ class ProjectController(ConfigTreeNode, PLCControler):
         return debug_status, ticks, buffers
 
     RegisterDebugVariableErrorCodes = { 
+        # Connector only can return None
+        None : _("Debug: connection problem.\n"),
         # TRACE_LIST_OVERFLOW
         1 : _("Debug: Too many variables traced. Max 1024.\n"),
         # FORCE_LIST_OVERFLOW
         2 : _("Debug: Too many variables forced. Max 256.\n"),
         # FORCE_BUFFER_OVERFLOW
-        3 : _("Debug: Cumulated forced variables size too large. Max 1KB.\n")
+        3 : _("Debug: Cumulated forced variables size too large. Max 1KB.\n"),
+        # DEBUG_SUSPENDED
+        4 : _("Debug: suspended.\n")
     }
 
     def RegisterDebugVarToConnector(self):
@@ -1624,7 +1635,8 @@ class ProjectController(ConfigTreeNode, PLCControler):
                     self.DebugToken = None
                     self.logger.write_warning(
                         self.RegisterDebugVariableErrorCodes.get(
-                            -res, _("Debug: Unknown error")))
+                            -res if res is not None else None,
+                            _("Debug: Unknown error")))
             else:
                 self.TracedIECPath = []
                 self._connector.SetTraceVariablesList([])

@@ -4,11 +4,12 @@
 import os
 import posixpath
 import sys
-from functools import wraps
+import time
 
-import click
+from functools import wraps
 from importlib import import_module
 
+import click
 
 class CLISession(object):
     def __init__(self, **kwargs):
@@ -102,6 +103,14 @@ def process_pipeline(session, processors, **kwargs):
             if len(processors) > 1 :
                 click.echo("Command sequence aborted")
             break
+
+    if session.keep:
+        click.echo("Press Ctrl+C to quit")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
 
     session.controller.finish()
 

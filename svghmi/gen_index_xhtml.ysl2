@@ -34,6 +34,7 @@ istylesheet
             xmlns:declarations="declarations"
             xmlns:definitions="definitions"
             xmlns:epilogue="epilogue"
+            xmlns:cssdefs="cssdefs"
 
             /* Namespace to invoke python code */
             xmlns:ns="beremiz"
@@ -74,6 +75,7 @@ istylesheet
             head {
                 style type="text/css" media="screen" {
                     value "ns:GetFonts()";
+                    apply "document('')/*/cssdefs:*";
                 }
             }
             // prevents user selection by mouse click / touch and drag
@@ -82,6 +84,8 @@ istylesheet
                 // Inline SVG
                 copy "$result_svg";
                 script{
+                    include text pythonic.js
+
                     | \n//\n//\n// Early independent declarations \n//\n//
                     apply "document('')/*/preamble:*";
 
@@ -96,10 +100,14 @@ istylesheet
 
                     include text sprintf.js
 
-                    include text pythonic.js
-
                     include text svghmi.js
 
+                    | \n//\n//\n// Declarations from SVG scripts (inkscape document properties) \n//\n//
+                    foreach "/svg:svg/svg:script" {
+                        |
+                        | /* «@id» */
+                        | «text()»
+                    }
                 }
             }
         }

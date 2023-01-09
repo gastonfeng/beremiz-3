@@ -1,7 +1,5 @@
 // svghmi.js
 
-var need_cache_apply = [];
-
 function dispatch_value(index, value) {
     let widgets = subscribers(index);
 
@@ -25,13 +23,6 @@ function init_widgets() {
 // Open WebSocket to relative "/ws" address
 var has_watchdog = window.location.hash == "#watchdog";
 
-var ws_url = 
-    window.location.href.replace(/^http(s?:\/\/[^\/]*)\/.*$/, 'ws$1/ws')
-    + '?mode=' + (has_watchdog ? "watchdog" : "multiclient");
-
-var ws = new WebSocket(ws_url);
-ws.binaryType = 'arraybuffer';
-
 const dvgetters = {
     INT: (dv,offset) => [dv.getInt16(offset, true), 2],
     BOOL: (dv,offset) => [dv.getInt8(offset, true), 1],
@@ -48,34 +39,47 @@ const dvgetters = {
     }
 };
 
-// Apply updates recieved through ws.onmessage to subscribed widgets
-function apply_updates() {
-    updates.forEach((value, index) => {
-        dispatch_value(index, value);
-    });
-    updates.clear();
-}
-
 // Called on requestAnimationFrame, modifies DOM
 var requestAnimationFrameID = null;
 function animate() {
-    // Do the page swith if any one pending
-    if(current_subscribed_page != current_visible_page){
-        switch_visible_page(current_subscribed_page);
-    }
+    let rearm = true;
+    do{
+        if(page_fading == "pending" || page_fading == "forced"){
+            if(page_fading == "pending")
+                svg_root.classList.add("fade-out-page");
+            page_fading = "in_progress";
+            if(page_fading_args.length)
+                setTimeout(function(){
+                    switch_page(...page_fading_args);
+                },1);
+            break;
+        }
 
-    while(widget = need_cache_apply.pop()){
-        widget.apply_cache();
-    }
+        // Do the page swith if pending
+        if(page_switch_in_progress){
+            if(current_subscribed_page != current_visible_page){
+                switch_visible_page(current_subscribed_page);
+            }
 
-    if(jumps_need_update) update_jumps();
+            page_switch_in_progress = false;
 
-    apply_updates();
+            if(page_fading == "in_progress"){
+                svg_root.classList.remove("fade-out-page");
+                page_fading = "off";
+            }
+        }
 
-    pending_widget_animates.forEach(widget => widget._animate());
-    pending_widget_animates = [];
+        if(jumps_need_update) update_jumps();
+
+
+        pending_widget_animates.forEach(widget => widget._animate());
+        pending_widget_animates = [];
+        rearm = false;
+    } while(0);
 
     requestAnimationFrameID = null;
+
+    if(rearm) requestHMIAnimation();
 }
 
 function requestHMIAnimation() {
@@ -87,7 +91,7 @@ function requestHMIAnimation() {
 // Message reception handler
 // Hash is verified and HMI values updates resulting from binary parsing
 // are stored until browser can compute next frame, DOM is left untouched
-ws.onmessage = function (evt) {
+function ws_onmessage(evt) {
 
     let data = evt.data;
     let dv = new DataView(data);
@@ -107,14 +111,14 @@ ws.onmessage = function (evt) {
             if(iectype != undefined){
                 let dvgetter = dvgetters[iectype];
                 let [value, bytesize] = dvgetter(dv,i);
-                updates.set(index, value);
+                dispatch_value(index, value);
                 i += bytesize;
             } else {
                 throw new Error("Unknown index "+index);
             }
         };
+
         // register for rendering on next frame, since there are updates
-        requestHMIAnimation();
     } catch(err) {
         // 1003 is for "Unsupported Data"
         // ws.close(1003, err.message);
@@ -129,16 +133,18 @@ ws.onmessage = function (evt) {
 
 hmi_hash_u8 = new Uint8Array(hmi_hash);
 
+var ws = null;
+
 function send_blob(data) {
-    if(data.length > 0) {
+    if(ws && data.length > 0) {
         ws.send(new Blob([hmi_hash_u8].concat(data)));
     };
 };
 
 const typedarray_types = {
     INT: (number) => new Int16Array([number]),
-    BOOL: (truth) => new Int16Array([truth]),
-    NODE: (truth) => new Int16Array([truth]),
+    BOOL: (truth) => new Int8Array([truth]),
+    NODE: (truth) => new Int8Array([truth]),
     REAL: (number) => new Float32Array([number]),
     STRING: (str) => {
         // beremiz default string max size is 128
@@ -188,6 +194,11 @@ function set_subscription_period(index, period) {
     }
 }
 
+function reset_subscription_periods() {
+    for(let index in subscriptions)
+        subscriptions[index][1] = 0;
+}
+
 if(has_watchdog){
     // artificially subscribe the watchdog widget to "/heartbeat" hmi variable
     // Since dispatch directly calls change_hmi_value,
@@ -202,6 +213,21 @@ if(has_watchdog){
     });
 }
 
+
+var page_fading = "off";
+var page_fading_args = "off";
+function fading_page_switch(...args){
+    if(page_fading == "in_progress")
+        page_fading = "forced";
+    else
+        page_fading = "pending";
+    page_fading_args = args;
+
+    requestHMIAnimation();
+
+}
+document.body.style.backgroundColor = "black";
+
 // subscribe to per instance current page hmi variable
 // PLC must prefix page name with "!" for page switch to happen
 subscribers(current_page_var_index).add({
@@ -209,7 +235,7 @@ subscribers(current_page_var_index).add({
     indexes: [current_page_var_index],
     new_hmi_value: function(index, value, oldval) {
         if(value.startsWith("!"))
-            switch_page(value.slice(1));
+            fading_page_switch(value.slice(1));
     }
 });
 
@@ -217,8 +243,8 @@ function svg_text_to_multiline(elt) {
     return(Array.prototype.map.call(elt.children, x=>x.textContent).join("\\\\n")); 
 }
 
-function multiline_to_svg_text(elt, str) {
-    str.split('\\\\n').map((line,i) => {elt.children[i].textContent = line;});
+function multiline_to_svg_text(elt, str, blank) {
+    str.split('\\\\n').map((line,i) => {elt.children[i].textContent = blank?"":line;});
 }
 
 function switch_langnum(langnum) {
@@ -272,6 +298,10 @@ setup_lang();
 
 function update_subscriptions() {
     let delta = [];
+    if(!ws)
+        // dont' change subscriptions if not connected
+        return;
+
     for(let index in subscriptions){
         let widgets = subscribers(index);
 
@@ -307,14 +337,13 @@ function update_subscriptions() {
 
 function send_hmi_value(index, value) {
     if(index > last_remote_index){
-        updates.set(index, value);
+        dispatch_value(index, value);
 
         if(persistent_indexes.has(index)){
             let varname = persistent_indexes.get(index);
             document.cookie = varname+"="+value+"; max-age=3153600000";
         }
 
-        requestHMIAnimation();
         return;
     }
 
@@ -379,6 +408,7 @@ var current_visible_page;
 var current_subscribed_page;
 var current_page_index;
 var page_node_local_index = hmi_local_index("page_node");
+var page_switch_in_progress = false;
 
 function toggleFullscreen() {
   let elem = document.documentElement;
@@ -392,12 +422,30 @@ function toggleFullscreen() {
   }
 }
 
-function prepare_svg() {
-    // prevents context menu from appearing on right click and long touch
-    document.body.addEventListener('contextmenu', e => {
-        toggleFullscreen();
-        e.preventDefault();
-    });
+// prevents context menu from appearing on right click and long touch
+document.body.addEventListener('contextmenu', e => {
+    toggleFullscreen();
+    e.preventDefault();
+});
+
+if(screensaver_delay){
+    var screensaver_timer = null;
+    function reset_screensaver_timer() {
+        if(screensaver_timer){
+            window.clearTimeout(screensaver_timer);
+        }
+        screensaver_timer = window.setTimeout(() => {
+            switch_page("ScreenSaver");
+            screensaver_timer = null;
+        }, screensaver_delay*1000);
+    }
+    document.body.addEventListener('pointerdown', reset_screensaver_timer);
+    // initialize screensaver
+    reset_screensaver_timer();
+}
+
+
+function detach_detachables() {
 
     for(let eltid in detachable_elements){
         let [element,parent] = detachable_elements[eltid];
@@ -406,11 +454,12 @@ function prepare_svg() {
 };
 
 function switch_page(page_name, page_index) {
-    if(current_subscribed_page != current_visible_page){
+    if(page_switch_in_progress){
         /* page switch already going */
         /* TODO LOG ERROR */
         return false;
     }
+    page_switch_in_progress = true;
 
     if(page_name == undefined)
         page_name = current_subscribed_page;
@@ -465,13 +514,19 @@ function switch_page(page_name, page_index) {
     jumps_need_update = true;
 
     requestHMIAnimation();
-    jump_history.push([page_name, page_index]);
-    if(jump_history.length > 42)
-        jump_history.shift();
+    let [last_page_name, last_page_index] = jump_history[jump_history.length-1];
+    if(last_page_name != page_name || last_page_index != page_index){
+        jump_history.push([page_name, page_index]);
+        if(jump_history.length > 42)
+            jump_history.shift();
+    }
 
     apply_hmi_value(current_page_var_index, page_index == undefined
         ? page_name
         : page_name + "@" + hmitree_paths[page_index]);
+
+    // when entering a page, assignments are evaluated
+    new_desc.widgets[0][0].assign();
 
     return true;
 };
@@ -505,25 +560,112 @@ function switch_visible_page(page_name) {
     current_visible_page = page_name;
 };
 
+/* From https://jsfiddle.net/ibowankenobi/1mmh7rs6/6/ */
+function getAbsoluteCTM(element){
+	var height = svg_root.height.baseVal.value,
+		width = svg_root.width.baseVal.value,
+		viewBoxRect = svg_root.viewBox.baseVal,
+		vHeight = viewBoxRect.height,
+		vWidth = viewBoxRect.width;
+	if(!vWidth || !vHeight){
+		return element.getCTM();
+	}
+	var sH = height/vHeight,
+		sW = width/vWidth,
+		matrix = svg_root.createSVGMatrix();
+	matrix.a = sW;
+	matrix.d = sH
+	var realCTM = element.getCTM().multiply(matrix.inverse());
+	realCTM.e = realCTM.e/sW + viewBoxRect.x;
+	realCTM.f = realCTM.f/sH + viewBoxRect.y;
+	return realCTM;
+}
+
+function apply_reference_frames(){
+    const matches = svg_root.querySelectorAll("g[svghmi_x_offset]");
+    matches.forEach((group) => {
+        let [x,y] = ["x", "y"].map((axis) => Number(group.getAttribute("svghmi_"+axis+"_offset")));
+        let ctm = getAbsoluteCTM(group);
+        // zero translation part of CTM
+        // to only apply rotation/skewing to offset vector
+        ctm.e = 0;
+        ctm.f = 0;
+        let invctm = ctm.inverse();
+        let vect = new DOMPoint(x, y);
+        let newvect = vect.matrixTransform(invctm);
+        let transform = svg_root.createSVGTransform();
+        transform.setTranslate(newvect.x, newvect.y);
+        group.transform.baseVal.appendItem(transform);
+        ["x", "y"].forEach((axis) => group.removeAttribute("svghmi_"+axis+"_offset"));
+    });
+}
+
+// prepare SVG
+apply_reference_frames();
+init_widgets();
+detach_detachables();
+
+// show main page
+switch_page(default_page);
+
+var reconnect_delay = 0;
+var periodic_reconnect_timer;
+var force_reconnect = false;
+
 // Once connection established
-ws.onopen = function (evt) {
-    init_widgets();
-    send_reset();
-    // show main page
-    prepare_svg();
-    switch_page(default_page);
+function ws_onopen(evt) {
+    // Work around memory leak with websocket on QtWebEngine
+    // reconnect every hour to force deallocate websocket garbage
+    if(window.navigator.userAgent.includes("QtWebEngine")){
+        if(periodic_reconnect_timer){
+            window.clearTimeout(periodic_reconnect_timer);
+        }
+        periodic_reconnect_timer = window.setTimeout(() => {
+            force_reconnect = true;
+            ws.close();
+            periodic_reconnect_timer = null;
+        }, 3600000);
+    }
+
+    // forget earlier subscriptions locally
+    reset_subscription_periods();
+
+    // update PLC about subscriptions and current page
+    switch_page();
+
+    // at first try reconnect immediately
+    reconnect_delay = 1;
 };
 
-ws.onclose = function (evt) {
-    // TODO : add visible notification while waiting for reload
-    console.log("Connection closed. code:"+evt.code+" reason:"+evt.reason+" wasClean:"+evt.wasClean+" Reload in 10s.");
-    // TODO : re-enable auto reload when not in debug
-    //window.setTimeout(() => location.reload(true), 10000);
-    alert("Connection closed. code:"+evt.code+" reason:"+evt.reason+" wasClean:"+evt.wasClean+".");
-
+function ws_onclose(evt) {
+    console.log("Connection closed. code:"+evt.code+" reason:"+evt.reason+" wasClean:"+evt.wasClean+" Reload in "+reconnect_delay+"ms.");
+    ws = null;
+    // Do not attempt to reconnect immediately in case:
+    //    - connection was closed by server (PLC stop)
+    //    - connection was closed locally with an intention to reconnect
+    if(evt.code=1000 && !force_reconnect){
+        window.alert("Connection closed by server");
+        location.reload();
+    }
+    window.setTimeout(create_ws, reconnect_delay);
+    reconnect_delay += 500;
+    force_reconnect = false;
 };
 
-const xmlns = "http://www.w3.org/2000/svg";
+var ws_url =
+    window.location.href.replace(/^http(s?:\/\/[^\/]*)\/.*$/, 'ws$1/ws')
+    + '?mode=' + (has_watchdog ? "watchdog" : "multiclient");
+
+function create_ws(){
+    ws = new WebSocket(ws_url);
+    ws.binaryType = 'arraybuffer';
+    ws.onmessage = ws_onmessage;
+    ws.onclose = ws_onclose;
+    ws.onopen = ws_onopen;
+}
+
+create_ws()
+
 var edit_callback;
 const localtypes = {"PAGE_LOCAL":null, "HMI_LOCAL":null}
 function edit_value(path, valuetype, callback, initial) {

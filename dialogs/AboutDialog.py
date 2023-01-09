@@ -34,6 +34,7 @@ This module contains classes extended from wx.Dialog used by the GUI.
 from __future__ import absolute_import
 import os
 import wx
+import wx.adv
 from wx.lib.agw.hyperlink import HyperLinkCtrl
 
 
@@ -52,7 +53,8 @@ class AboutDialog(wx.Dialog):
 
         image = None
         if self.info.Icon:
-            bitmap = wx.BitmapFromIcon(self.info.Icon)
+            bitmap = wx.Bitmap()
+            bitmap.CopyFromIcon(self.info.Icon)
             image = wx.StaticBitmap(self, bitmap=bitmap)
 
         name = wx.StaticText(self, label="%s %s" % (info.Name, info.Version))
@@ -172,4 +174,4 @@ def ShowAboutDialog(parent, info):
     if os.name == "nt":
         AboutDialog(parent, info)
     else:
-        wx.AboutBox(info)
+        wx.adv.AboutBox(info)

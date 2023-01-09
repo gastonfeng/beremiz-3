@@ -140,7 +140,7 @@ void __init_debug(void)
     InitRetain();
     /* Iterate over all variables to fill debug buffer */
     if(CheckRetainBuffer()){
-        static unsigned int retain_offset = 0;
+        unsigned int retain_offset = 0;
         retain_list_collect_cursor = 0;
 
         /* iterate over retain list */
@@ -153,8 +153,6 @@ void __init_debug(void)
                 retain_list[retain_list_collect_cursor]];
 
             UnpackVar(dsc, &value_p, NULL, &size);
-
-            printf("Reminding %%d %%ld \n", retain_list_collect_cursor, size);
 
             /* if buffer not full */
             Remind(retain_offset, size, value_p);
@@ -211,8 +209,6 @@ unsigned int GetRetainSize(void)
         retain_list_collect_cursor++;
     }
 
-    printf("Retain size %%d \n", retain_size);
-            
     return retain_size;
 }
 
@@ -322,7 +318,7 @@ void __publish_debug(void)
         LeaveDebugSection();
     }
 #endif
-    static unsigned int retain_offset = 0;
+    unsigned int retain_offset = 0;
     /* when not debugging, do only retain */
     retain_list_collect_cursor = 0;
 

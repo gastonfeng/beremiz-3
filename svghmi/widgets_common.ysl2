@@ -14,6 +14,32 @@ decl optional_labels(*ptr) alias - {
     }
 };
 
+decl warning_labels(*ptr) alias - {
+    labels(*ptr){
+        with "mandatory","'warn'";
+        content;
+    }
+};
+
+decl _activable(*level) alias - {
+    |     activable_sub:{
+    const "activity" labels("/active /inactive") {
+        with "mandatory"{text *level};
+        content;
+    }
+    value "$activity";
+    const "has_activity","string-length($activity)>0";
+    |     },
+    |     has_activity: «$has_activity»,
+};
+
+decl activable() alias - {
+    _activable("warn")
+};
+decl optional_activable() alias - {
+    _activable("no")
+};
+
 decl activable_labels(*ptr) alias - {
     optional_labels(*ptr) {
         with "subelements","'active inactive'";
@@ -34,6 +60,10 @@ in xsl decl widget_class(%name, *clsname="%nameWidget", match="widget[@type='%na
 
 in xsl decl widget_defs(%name, match="widget[@type='%name']", mode="widget_defs") alias template {
     param "hmi_element";
+    // all widget potentially has a "disabled" labeled element
+    const "disability" optional_labels("/disabled");
+    value "$disability";
+    const "has_disability","string-length($disability)>0";
     content;
 };
 
@@ -51,6 +81,11 @@ template "svg:*", mode="hmi_widgets" {
     const "eltid","@id";
     const "args" foreach "$widget/arg" > "«func:escape_quotes(@value)»"`if "position()!=last()" > ,`
     const "indexes" foreach "$widget/path" {
+        if "position()!=last()" > ,
+    }
+
+    const "variables" foreach "$widget/path" {
+        > [
         choose {
             when "not(@index)" {
                 choose {
@@ -70,16 +105,15 @@ template "svg:*", mode="hmi_widgets" {
                 > «@index»
             }
         }
-        if "position()!=last()" > ,
-    }
-
-    const "minmaxes" foreach "$widget/path" {
-        choose {
-            when "@min and @max"
-                > [«@min»,«@max»]
-            otherwise
-                > undefined
+        > , {
+        if "@min and @max"{
+                > minmax:[«@min», «@max»]
+                if "@assign"
+                    > ,
         }
+        if "@assign"
+                > assign:"«@assign»"
+        > }]
         if "position()!=last()" > ,
     }
 
@@ -90,7 +124,34 @@ template "svg:*", mode="hmi_widgets" {
             > undefined
     }
 
-    |   "«@id»": new «$widget/@type»Widget ("«@id»",«$freq»,[«$args»],[«$indexes»],[«$minmaxes»],{
+    const "enable_expr" choose{
+        when "$widget/@enable_expr"
+            > true
+        otherwise
+            > false
+    }
+
+    |   "«@id»": new «$widget/@type»Widget ("«@id»",«$freq»,[«$args»],[«$variables»],«$enable_expr»,{
+    if "$widget/@enable_expr" {
+
+    |       enable_assignments: [],
+    |       compute_enable: function(value, oldval, varnum) {
+    |         let result = false;
+    |         do {
+        foreach "$widget/path" {
+            const "varid","generate-id()";
+            const "varnum","position()-1";
+            if "@assign" foreach "$widget/path[@assign]" if "$varid = generate-id()" {
+    |           if(varnum == «$varnum») this.enable_assignments[«position()-1»] = value;
+    |           let «@assign» = this.enable_assignments[«position()-1»];
+    |           if(«@assign» == undefined) break;
+            }
+        }
+    |           result = «$widget/@enable_expr»;
+    |         } while(0);
+    |         this.enable(result);
+    |       },
+    }
     apply "$widget", mode="widget_defs" with "hmi_element",".";
     |   })`if "position()!=last()" > ,`
 }
@@ -128,14 +189,13 @@ emit "preamble:local-variable-indexes" {
     ]);
     var persistent_indexes = new Map();
     var cache = hmitree_types.map(_ignored => undefined);
-    var updates = new Map();
 
     function page_local_index(varname, pagename){
         let pagevars = hmi_locals[pagename];
         let new_index;
         if(pagevars == undefined){
             new_index = next_available_index++;
-            hmi_locals[pagename] = {[varname]:new_index}
+            hmi_locals[pagename] = {[varname]:new_index};
         } else {
             let result = pagevars[varname];
             if(result != undefined) {
@@ -148,7 +208,6 @@ emit "preamble:local-variable-indexes" {
         let defaultval = local_defaults[varname];
         if(defaultval != undefined) {
             cache[new_index] = defaultval; 
-            updates.set(new_index, defaultval);
             if(persistent_locals.has(varname))
                 persistent_indexes.set(new_index, varname);
         }
@@ -165,23 +224,61 @@ emit "preamble:widget-base-class" {
     ||
     var pending_widget_animates = [];
 
+    function _hide(elt, placeholder){
+        if(elt.parentNode != null)
+            placeholder.parentNode.removeChild(elt);
+    }
+    function _show(elt, placeholder){
+        placeholder.parentNode.insertBefore(elt, placeholder);
+    }
+
+    function set_activity_state(eltsub, state){
+        if(eltsub.active_elt != undefined){
+            if(eltsub.active_elt_placeholder == undefined){
+                eltsub.active_elt_placeholder = document.createComment("");
+                eltsub.active_elt.parentNode.insertBefore(eltsub.active_elt_placeholder, eltsub.active_elt);
+            }
+            (state?_show:_hide)(eltsub.active_elt, eltsub.active_elt_placeholder);
+        }
+        if(eltsub.inactive_elt != undefined){
+            if(eltsub.inactive_elt_placeholder == undefined){
+                eltsub.inactive_elt_placeholder = document.createComment("");
+                eltsub.inactive_elt.parentNode.insertBefore(eltsub.inactive_elt_placeholder, eltsub.inactive_elt);
+            }
+            ((state || state==undefined)?_hide:_show)(eltsub.inactive_elt, eltsub.inactive_elt_placeholder);
+        }
+    }
+
     class Widget {
         offset = 0;
         frequency = 10; /* FIXME arbitrary default max freq. Obtain from config ? */
         unsubscribable = false;
         pending_animate = false;
 
-        constructor(elt_id, freq, args, indexes, minmaxes, members){
+        constructor(elt_id, freq, args, variables, enable_expr, members){
             this.element_id = elt_id;
             this.element = id(elt_id);
             this.args = args;
-            this.indexes = indexes;
-            this.minmaxes = minmaxes;
+            
+            [this.indexes, this.variables_options] = (variables.length>0) ? zip(...variables) : [[],[]];
+            this.indexes_length = this.indexes.length;
+
+            this.enable_expr = enable_expr;
+            this.enable_state = true;
+            this.enable_displayed_state = true;
+            this.enabled_elts = [];
+
             Object.keys(members).forEach(prop => this[prop]=members[prop]);
-            this.lastapply = indexes.map(() => undefined);
-            this.inhibit = indexes.map(() => undefined);
-            this.pending = indexes.map(() => undefined);
-            this.bound_unhinibit = this.unhinibit.bind(this);
+            this.lastapply = this.indexes.map(() => undefined);
+            this.inhibit = this.indexes.map(() => undefined);
+            this.pending = this.indexes.map(() => undefined);
+            this.bound_uninhibit = this.uninhibit.bind(this);
+
+            this.lastdispatch = this.indexes.map(() => undefined);
+            this.deafen = this.indexes.map(() => undefined);
+            this.incoming = this.indexes.map(() => undefined);
+            this.bound_undeafen = this.undeafen.bind(this);
+
             this.forced_frequency = freq;
             this.clip = true;
         }
@@ -214,24 +311,39 @@ emit "preamble:widget-base-class" {
                     console.log(err);
                 }
             }
+
+            if(this.enable_expr){
+                this.enable_state = false;
+                this.enable_displayed_state = false;
+                for(let child of Array.from(this.element.children)){
+                    let label = child.getAttribute("inkscape:label");
+                    if(label!="disabled"){
+                        this.enabled_elts.push(child);
+                        this.element.removeChild(child);
+                    }
+                }
+            }
         }
 
         unsub(){
             /* remove subsribers */
-            if(!this.unsubscribable)
-                for(let i = 0; i < this.indexes.length; i++) {
-                    /* flush updates pending because of inhibition */
-                    let inhibition = this.inhibit[i];
-                    if(inhibition != undefined){
-                        clearTimeout(inhibition);
-                        this.lastapply[i] = undefined;
-                        this.unhinibit(i);
-                    }
-                    let index = this.indexes[i];
-                    if(this.relativeness[i])
-                        index += this.offset;
-                    subscribers(index).delete(this);
+            for(let i = 0; i < this.indexes_length; i++) {
+                /* flush updates pending because of inhibition */
+                let inhibition = this.inhibit[i];
+                if(inhibition != undefined){
+                    clearTimeout(inhibition);
+                    this.lastapply[i] = undefined;
+                    this.uninhibit(i);
                 }
+                let deafened = this.deafen[i];
+                if(deafened != undefined){
+                    clearTimeout(deafened);
+                    this.lastdispatch[i] = undefined;
+                    this.undeafen(i);
+                }
+                let index = this.get_variable_index(i);
+                subscribers(index).delete(this);
+            }
             this.offset = 0;
             this.relativeness = undefined;
         }
@@ -241,23 +353,22 @@ emit "preamble:widget-base-class" {
             this.relativeness = relativeness;
             this.container_id = container_id ;
             /* add this's subsribers */
-            if(!this.unsubscribable)
-                for(let i = 0; i < this.indexes.length; i++) {
-                    let index = this.get_variable_index(i);
-                    if(index == undefined) continue;
-                    subscribers(index).add(this);
-                }
-            need_cache_apply.push(this); 
+            for(let i = 0; i < this.indexes_length; i++) {
+                let index = this.get_variable_index(i);
+                if(index == undefined) continue;
+                subscribers(index).add(this);
+            }
+            this.apply_cache(); 
         }
 
         apply_cache() {
-            if(!this.unsubscribable) for(let index in this.indexes){
+            for(let i = 0; i < this.indexes_length; i++) {
                 /* dispatch current cache in newly opened page widgets */
-                let realindex = this.get_variable_index(index);
+                let realindex = this.get_variable_index(i);
                 if(realindex == undefined) continue;
                 let cached_val = cache[realindex];
                 if(cached_val != undefined)
-                    this._dispatch(cached_val, cached_val, index);
+                    this.feed_data_for_dispatch(cached_val, cached_val, i);
             }
         }
 
@@ -280,7 +391,7 @@ emit "preamble:widget-base-class" {
         }
 
         clip_min_max(index, new_val) {
-            let minmax = this.minmaxes[index];
+            let minmax = this.variables_options[index].minmax;
             if(minmax !== undefined && typeof new_val == "number") {
                 let [min,max] = minmax;
                 if(new_val < min){
@@ -313,7 +424,7 @@ emit "preamble:widget-base-class" {
             return apply_hmi_value(realindex, new_val);
         }
 
-        unhinibit(index){
+        uninhibit(index){
             this.inhibit[index] = undefined;
             let new_val = this.pending[index];
             this.pending[index] = undefined;
@@ -332,7 +443,7 @@ emit "preamble:widget-base-class" {
                 else {
                     let elapsed = now - lastapply;
                     this.pending[index] = new_val;
-                    this.inhibit[index] = setTimeout(this.bound_unhinibit, min_interval - elapsed, index);
+                    this.inhibit[index] = setTimeout(this.bound_uninhibit, min_interval - elapsed, index);
                 }
             }
             else {
@@ -343,30 +454,109 @@ emit "preamble:widget-base-class" {
 
         new_hmi_value(index, value, oldval) {
             // TODO avoid searching, store index at sub()
-            for(let i = 0; i < this.indexes.length; i++) {
+            for(let i = 0; i < this.indexes_length; i++) {
                 let refindex = this.get_variable_index(i);
                 if(refindex == undefined) continue;
 
                 if(index == refindex) {
-                    this._dispatch(value, oldval, i);
+                    this.feed_data_for_dispatch(value, oldval, i);
                     break;
                 }
             }
         }
-        
-        _dispatch(value, oldval, varnum) {
-            let dispatch = this.dispatch;
-            if(dispatch != undefined){
-                try {
-                    dispatch.call(this, value, oldval, varnum);
-                } catch(err) {
-                    console.log(err);
+
+        undeafen(index){
+            this.deafen[index] = undefined;
+            let [new_val, old_val] = this.incoming[index];
+            this.incoming[index] = undefined;
+            this.lastdispatch[index] = Date.now();
+            this.do_dispatch(new_val, old_val, index);
+        }
+
+        enable(enabled){
+            if(this.enable_state != enabled){
+                this.enable_state = enabled;
+                this.request_animate();
+            }
+        }
+
+        animate_enable(){
+            if(this.enable_state && !this.enable_displayed_state){
+                //show widget
+                for(let child of this.enabled_elts){
+                    this.element.appendChild(child);
+                }
+
+                //hide disabled content
+                if(this.disabled_elt && this.disabled_elt.parentNode != null)
+                    this.element.removeChild(this.disabled_elt);
+
+                this.enable_displayed_state = true;
+
+            }else if(!this.enable_state && this.enable_displayed_state){
+
+                //hide widget
+                for(let child of this.enabled_elts){
+                    if(child.parentNode != null)
+                        this.element.removeChild(child);
+                }
+
+                //show disabled content
+                if(this.disabled_elt)
+                    this.element.appendChild(this.disabled_elt);
+
+                this.enable_displayed_state = false;
+
+                // once disabled activity display is lost
+                this.activity_displayed_state = undefined;
+            }
+        }
+
+        feed_data_for_dispatch(value, oldval, varnum) {
+            if(this.dispatch || this.enable_expr){
+                if(this.deafen[varnum] == undefined){
+                    let now = Date.now();
+                    let min_interval = 1000/this.frequency;
+                    let lastdispatch = this.lastdispatch[varnum];
+                    if(lastdispatch == undefined || now > lastdispatch + min_interval){
+                        this.lastdispatch[varnum] = now;
+                        this.do_dispatch(value, oldval, varnum)
+                    }
+                    else {
+                        let elapsed = now - lastdispatch;
+                        this.incoming[varnum] = [value, oldval];
+                        this.deafen[varnum] = setTimeout(this.bound_undeafen, min_interval - elapsed, varnum);
+                    }
+                }
+                else {
+                    this.incoming[varnum] = [value, oldval];
                 }
             }
         }
 
+        do_dispatch(value, oldval, varnum) {
+            if(this.dispatch) try {
+                this.dispatch(value, oldval, varnum);
+            } catch(err) {
+                console.log(err);
+            }
+            if(this.enable_expr) try {
+                this.compute_enable(value, oldval, varnum);
+            } catch(err) {
+                console.log(err);
+            }
+        }
+
         _animate(){
-            this.animate();
+            if(this.enable_expr)
+                this.animate_enable();
+            // inhibit widget animation when disabled
+            if(!this.enable_expr || this.enable_state){
+                if(this.has_activity)
+                    this.animate_activity();
+                if(this.animate != undefined)
+                    this.animate();
+            }
             this.pending_animate = false;
         }
 
@@ -376,17 +566,13 @@ emit "preamble:widget-base-class" {
                 this.pending_animate = true;
                 requestHMIAnimation();
             }
-
         }
 
-        activate_activable(eltsub) {
-            eltsub.inactive.style.display = "none";
-            eltsub.active.style.display = "";
-        }
-
-        inactivate_activable(eltsub) {
-            eltsub.active.style.display = "none";
-            eltsub.inactive.style.display = "";
+        animate_activity(){
+            if(this.activity_displayed_state != this.activity_state){
+                set_activity_state(this.activable_sub, this.activity_state);
+                this.activity_displayed_state = this.activity_state;
+            }
         }
     }
     ||
@@ -402,23 +588,29 @@ emit "declarations:hmi-classes" {
                                     generate-id() = generate-id(key('TypesKey', @type)) and 
                                     not(@type = $excluded_types)]""";
     apply "$used_widget_types", mode="widget_class";
+
 }
 
-template "widget", mode="widget_class"
-||
-class «@type»Widget extends Widget{
-    /* empty class, as «@type» widget didn't provide any */
+template "widget", mode="widget_class" {
+    ||
+    class «@type»Widget extends Widget{
+        /* empty class, as «@type» widget didn't provide any */
+    }
+    ||
+    warning > «@type» widget is used in SVG but widget type is not declared
 }
-||
 
 const "included_ids","$parsed_widgets/widget[not(@type = $excluded_types) and not(@id = $discardable_elements/@id)]/@id";
+const "page_ids","$parsed_widgets/widget[@type = 'Page']/@id";
 const "hmi_widgets","$hmi_elements[@id = $included_ids]";
+const "page_widgets","$hmi_elements[@id = $page_ids]";
 const "result_widgets","$result_svg_ns//*[@id = $hmi_widgets/@id]";
 
 emit "declarations:hmi-elements" {
     | var hmi_widgets = {
-    apply "$hmi_widgets", mode="hmi_widgets";
+    apply "$hmi_widgets | $page_widgets", mode="hmi_widgets";
     | }
+    |
 }
 
 function "defs_by_labels" {
@@ -427,6 +619,7 @@ function "defs_by_labels" {
     param "subelements","/..";
     param "hmi_element";
     const "widget_type","@type";
+    const "widget_id","@id";
     foreach "str:split($labels)" {
         const "absolute", "starts-with(., '/')";
         const "name","substring(.,number($absolute)+1)";
@@ -434,8 +627,16 @@ function "defs_by_labels" {
         const "elt","($widget//*[not($absolute) and @inkscape:label=$name] | $widget/*[$absolute and @inkscape:label=$name])[1]";
         choose {
             when "not($elt/@id)" {
-                if "$mandatory='yes'" {
-                    error > «$widget_type» widget must have a «$name» element
+                if "$mandatory!='no'" {
+                    const "errmsg" > «$widget_type» widget (id=«$widget_id») must have a «$name» element
+                    choose { 
+                        when "$mandatory='yes'" {
+                            error > «$errmsg»
+                        }
+                        otherwise {
+                            warning > «$errmsg»
+                        }
+                    }
                 }
                 // otherwise produce nothing
             }
@@ -448,13 +649,21 @@ function "defs_by_labels" {
                         const "subelt","$elt/*[@inkscape:label=$subname][1]";
                         choose {
                             when "not($subelt/@id)" {
-                                if "$mandatory='yes'" {
-                                    error > «$widget_type» widget must have a «$name»/«$subname» element
+                                if "$mandatory!='no'" {
+                                    const "errmsg" > «$widget_type» widget (id=«$widget_id») must have a «$name»/«$subname» element
+                                    choose { 
+                                        when "$mandatory='yes'" {
+                                            error > «$errmsg»
+                                        }
+                                        otherwise {
+                                            warning > «$errmsg»
+                                        }
+                                    }
                                 }
                 |         /* missing «$name»/«$subname» element */
                             }
                             otherwise {
-                |         "«$subname»": id("«$subelt/@id»")`if "position()!=last()" > ,`
+                |         "«$subname»_elt": id("«$subelt/@id»")`if "position()!=last()" > ,`
                             }
                         }
                     }

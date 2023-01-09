@@ -151,7 +151,7 @@ template "state", mode="actions" {
     |     }
 }
 template "show", mode="actions" {
-    |         this.display = "«@eltname»";
+    |         this.activity_state = «@eltname = 'active'»;
     |         this.request_animate();
 }
 template "hmi-value", mode="actions" {
@@ -164,7 +164,6 @@ template "hmi-value", mode="actions" {
 function "generated_button_class" {
     param "fsm";
 
-    |     display = "inactive";
     |     state = "init";
 
     |     dispatch(value) {
@@ -182,20 +181,10 @@ function "generated_button_class" {
 
     apply "$fsm", mode="actions";
 
-    |     animate(){
-    |         if (this.active_elt && this.inactive_elt) {
-    foreach "str:split('active inactive')" {
-    |             if(this.display == "«.»")
-    |                 this.«.»_elt.style.display = "";
-    |             else
-    |                 this.«.»_elt.style.display = "none";
-    }
-    |         }
-    |     }
-
     |     init() {
     |         this.bound_onmouseup = this.onmouseup.bind(this);
     |         this.element.addEventListener("pointerdown", this.onmousedown.bind(this));
+    |         this.activity_state = undefined;
     |     }
 }
 
@@ -207,7 +196,7 @@ widget_class("Button"){
 }
 
 widget_defs("Button") {
-    optional_labels("active inactive");
+    activable();
 }
 
 widget_class("PushButton"){
@@ -217,6 +206,6 @@ widget_class("PushButton"){
 }
 
 widget_defs("PushButton") {
-    optional_labels("active inactive");
+    activable();
 }
 

@@ -132,6 +132,15 @@ class ConfigTreeNode(object):
     def CTNTestModified(self):
         return self.ChangesToSave
 
+    def CTNMarkModified(self):
+        oldChangesToSave = self.ChangesToSave
+        self.ChangesToSave = True
+        if not oldChangesToSave:
+            appframe = self.GetCTRoot().AppFrame
+            if appframe is not None:
+                appframe.RefreshTitle()
+                appframe.RefreshPageTitles()
+
     def ProjectTestModified(self):
         """
         recursively check modified status
@@ -470,7 +479,7 @@ class ConfigTreeNode(object):
         return None
 
     def GetView(self, onlyopened=False):
-        if self._View is None and not onlyopened and self.EditorType is not None:
+        if not self._View and not onlyopened and self.EditorType is not None:
             app_frame = self.GetCTRoot().AppFrame
             self._View = self.EditorType(app_frame.TabsOpened, self, app_frame)
 

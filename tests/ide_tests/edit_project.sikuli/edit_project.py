@@ -13,7 +13,7 @@ from sikuliberemiz import run_test
 
 def test(app):
 
-    app.doubleClick("1646062660770.png")
+    app.doubleClick("main")
 
     app.WaitIdleUI()
 
@@ -25,7 +25,7 @@ def test(app):
 
     app.WaitIdleUI()
 
-    app.doubleClick("1646066996620.png")
+    app.doubleClick("Hello")
 
     app.WaitIdleUI()
 
@@ -36,8 +36,6 @@ def test(app):
     app.type(Key.ENTER)
 
     app.WaitIdleUI()
-
-    app.k.Save()
 
     app.k.Clean()
 

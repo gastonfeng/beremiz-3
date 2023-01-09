@@ -30,6 +30,7 @@ import os
 import sys
 import shutil
 import time
+import signal
 from time import time as gettime
 from threading import Lock, Timer, currentThread
 
@@ -37,6 +38,7 @@ from six.moves import cPickle, range
 import wx.lib.buttons
 import wx.lib.statbmp
 import wx.stc
+import wx.adv
 
 
 import version
@@ -416,7 +418,7 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
         # self.BottomNoteBook.Split(self.BottomNoteBook.GetPageIndex(self.LogViewer), wx.RIGHT)
 
         StatusToolBar = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
-                                   wx.TB_FLAT | wx.TB_NODIVIDER | wx.NO_BORDER)
+                                   wx.TB_FLAT | wx.TB_HORIZONTAL | wx.NO_BORDER)
         StatusToolBar.SetToolBitmapSize(wx.Size(25, 25))
         StatusToolBar.Realize()
         self.Panes["StatusToolBar"] = StatusToolBar
@@ -507,6 +509,8 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
         self.RefreshAll()
         self.LogConsole.SetFocus()
 
+        signal.signal(signal.SIGTERM,self.signalTERM_handler)
+
     def RefreshTitle(self):
         name = _("Beremiz")
         if self.CTR is not None:
@@ -535,7 +539,8 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
         event.Skip()
 
     def OnLogConsoleUpdateUI(self, event):
-        self.SetCopyBuffer(self.LogConsole.GetSelectedText(), True)
+        if event.GetUpdated()==wx.stc.STC_UPDATE_SELECTION:
+            self.SetCopyBuffer(self.LogConsole.GetSelectedText(), True)
         event.Skip()
 
     def OnLogConsoleMarginClick(self, event):
@@ -642,6 +647,11 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
             # prevent event to continue, i.e. cancel closing
             event.Veto()
 
+    def signalTERM_handler(self, sig, frame):
+        print ("Signal TERM caught: kill local runtime and quit, no save")
+        self.KillLocalRuntime()
+        sys.exit()
+
     def RefreshFileMenu(self):
         self.RefreshRecentProjectsMenu()
 
@@ -745,8 +755,9 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
             for confnode_method in self.CTR.StatusMethods:
                 if "method" in confnode_method and confnode_method.get("shown", True):
                     tool = StatusToolBar.AddTool(
-                        wx.ID_ANY, confnode_method["tooltip"],
-                        GetBitmap(confnode_method.get("bitmap", "Unknown")))
+                        wx.ID_ANY, confnode_method["name"],
+                        GetBitmap(confnode_method.get("bitmap", "Unknown")),
+                        confnode_method["tooltip"])
                     self.Bind(wx.EVT_MENU, self.GetMenuCallBackFunction(confnode_method["method"]), tool)
 
             StatusToolBar.Realize()
@@ -963,7 +974,15 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
         self.Close()
 
     def OnAboutMenu(self, event):
-        info = version.GetAboutDialogInfo()
+        info = wx.adv.AboutDialogInfo()
+        info = version.GetAboutDialogInfo(info)
+        info.Name = "Beremiz"
+        info.Description = _("Open Source framework for automation, "
+            "implementing IEC 61131 IDE with constantly growing set of extensions "
+            "and flexible PLC runtime.")
+
+        info.Icon = wx.Icon(Bpath("images", "about_brz_logo.png"), wx.BITMAP_TYPE_PNG)
+
         ShowAboutDialog(self, info)
 
     def OnProjectTreeItemBeginEdit(self, event):

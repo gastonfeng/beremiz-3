@@ -51,6 +51,8 @@ widget_class("Input")
      undershot(new_val, min) {
          this.alert("min");
      }
+
+     display = "";
 ||
 
 widget_defs("Input") {
@@ -63,9 +65,10 @@ widget_defs("Input") {
     const "have_edit","string-length($edit_elt)>0";
     value "$edit_elt";
 
+    const "action_elements", "$hmi_element/*[regexp:test(@inkscape:label,'^[=+\-].+')]";
+
     if "$have_value"
     |     frequency: 5,
-
     |     dispatch: function(value) {
 
 
@@ -89,10 +92,13 @@ widget_defs("Input") {
 
     if "$have_value" {
     |     animate: function(){
-    |         this.value_elt.textContent = String(this.display);
+    |         multiline_to_svg_text(this.value_elt, String(this.display));
     |     },
     }
 
+    foreach "$action_elements" {
+    |     action_elt_«position()»: id("«@id»"),
+    }
     |     init: function() {
 
     if "$have_edit" {
@@ -100,11 +106,15 @@ widget_defs("Input") {
         if "$have_value" {
     |         this.value_elt.style.pointerEvents = "none";
         }
+    |         this.animate();
     }
 
-    foreach "$hmi_element/*[regexp:test(@inkscape:label,'^[=+\-].+')]" {
-    |         id("«@id»").onclick = () => this.on_op_click("«func:escape_quotes(@inkscape:label)»");
+    foreach "$action_elements" {
+    |         this.action_elt_«position()».onclick = () => this.on_op_click("«func:escape_quotes(@inkscape:label)»");
     }
 
+    if "$have_value" {
+    |         multiline_to_svg_text(this.value_elt, "");
+    }
     |     },
 }

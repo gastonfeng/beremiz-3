@@ -166,6 +166,7 @@ class DebugVariableGraphicDropTarget(wx.TextDropTarget):
         # Display message if data is invalid
         if message is not None:
             wx.CallAfter(self.ShowMessage, message)
+            return False
 
         # Data contain a reference to a variable to debug
         elif values[1] == "debug":
@@ -209,6 +210,8 @@ class DebugVariableGraphicDropTarget(wx.TextDropTarget):
                     self.ParentWindow.InsertValue(values[0],
                                                   target_idx,
                                                   force=True)
+            return True
+        return False
 
     def OnLeave(self):
         """
@@ -278,7 +281,6 @@ class DebugVariableGraphicViewer(DebugVariableViewer, FigureCanvas):
 
         FigureCanvas.__init__(self, parent, -1, self.Figure)
         self.SetWindowStyle(wx.WANTS_CHARS)
-        self.SetBackgroundColour(wx.WHITE)
 
         # Bind wx events
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)

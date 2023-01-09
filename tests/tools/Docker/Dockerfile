@@ -19,24 +19,35 @@ RUN useradd -m -u $UID -g $GID -s /bin/bash $UNAME
 
 RUN set -xe \
     && apt-get update \
+    && apt-get install locales \
+    && locale-gen en_US.UTF-8 \
+    && update-locale LANG=en_US.UTF-8
+
+RUN set -xe \
     && TZ="America/Paris" \
        DEBIAN_FRONTEND="noninteractive" \
        apt-get install -y --no-install-recommends \
-               `# run sikuli` \
+               `# to run sikuli` \
                wget \
                libopencv4.2-java \
                openjdk-11-jre \
                \
-               `# run X based tests` \
+               `# to run X based tests` \
                fluxbox \
                wmctrl xdotool xvfb \
                x11vnc xterm xnest \
+               materia-gtk-theme \
                \
                `# to build tested apps` \
                build-essential automake flex bison mercurial \
                libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev \
                libpython2.7-dev libssl-dev \
-               python2 virtualenv
+               python2 virtualenv cmake
+
+
+# force bigger font and flat theme for GTK in order to make OCR more reliable
+RUN mkdir -p /etc/gtk-3.0
+RUN env echo -e '[Settings]\ngtk-font-name=FreeSans,12\ngtk-theme-name=Materia\n' > /etc/gtk-3.0/settings.ini
 
 # link obtained from https://raiman.github.io/SikuliX1/downloads.html
 RUN set -xe && \
@@ -48,7 +59,8 @@ RUN set -xe && \
     ) | install /dev/stdin /usr/local/bin/sikulix
 
 
-RUN echo -e '#!/bin/bash\nmake -f /home/testing/src/beremiz/tests/Makefile $*' > /usr/local/bin/do_tests
+# easy to remember 'do_tests' alias to invoke main makefile
+RUN env echo -e '#!/bin/bash\nmake -f /home/testing/src/beremiz/tests/Makefile $*' > /usr/local/bin/do_tests
 RUN chmod +x /usr/local/bin/do_tests
 
 USER $UNAME
@@ -60,14 +72,19 @@ RUN virtualenv --python=$(which python2) ~/beremizenv
 RUN ~/beremizenv/bin/pip install \
         pytest pytest-timeout ddt \
         lxml future matplotlib zeroconf2 enum34 pyro sslpsk posix_spawn \
-        twisted nevow autobahn \
+        twisted nevow autobahn click opcua \
         wxPython==4.1.1
 
-# Point to python binary test scripts will use
+RUN set -xe && \
+    cd  /home/$UNAME && mkdir tessdata && \
+    wget -q https://github.com/tesseract-ocr/tessdata/archive/refs/tags/4.1.0.tar.gz \
+         -O tessdata.tar.gz && \
+    echo 89e25c7c40a59be7195422a01f57fcb2 tessdata.tar.gz | md5sum -c && \
+    tar --strip-components=1 -C tessdata -x -v -z -f tessdata.tar.gz && \
+    rm tessdata.tar.gz
+
+ENV TESSDATAPATH /home/$UNAME/tessdata
+
+# Points to python binary that test will use
 ENV BEREMIZPYTHONPATH /home/$UNAME/beremizenv/bin/python
-
-# easy to remember 'do_tests' alias to invoke main makefile
-ARG OWNDIRBASENAME=beremiz
-ENV OWNDIRBASENAME ${OWNDIRBASENAME}
-
 
