@@ -65,6 +65,7 @@ from runtime import PlcStatus
 from ConfigTreeNode import ConfigTreeNode, XSDSchemaErrorMessage
 from POULibrary import UserAddressedException
 
+_ = wx.GetTranslation
 base_folder = paths.AbsParentDir(__file__)
 
 MATIEC_ERROR_MODEL = re.compile(
@@ -187,7 +188,7 @@ class Iec2CSettings(object):
 
 
 def GetProjectControllerXSD():
-    XSD = """<?xml version="1.0" encoding="ISO-8859-1" ?>
+    XSD = """<?xml version="1.0" encoding="utf-8" ?>
     <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="BeremizRoot">
         <xsd:complexType>
@@ -632,7 +633,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
             LocatedCCodeAndFlags.append(res[:2])
             if len(res) > 2:
                 Extras.extend(res[2:])
-        return map(list, zip(*LocatedCCodeAndFlags)) + [tuple(Extras)]
+        return list(map(list, list(zip(*LocatedCCodeAndFlags)))) + [tuple(Extras)]
 
     # Update PLCOpenEditor ConfNode Block types from loaded confnodes
     def RefreshConfNodesBlockLists(self):
@@ -1096,9 +1097,9 @@ class ProjectController(ConfigTreeNode, PLCControler):
         """
         # filter location that are related to code that will be called
         # in retreive, publish, init, cleanup
-        locstrs = map(lambda x: "_".join(map(str, x)),
+        locstrs = list(map(lambda x: "_".join(list(map(str, x))),
                       [loc for loc, _Cfiles, DoCalls in
-                       self.LocationCFilesAndCFLAGS if loc and DoCalls])
+                       self.LocationCFilesAndCFLAGS if loc and DoCalls]))
 
         # Generate main, based on template
         if not self.BeremizRoot.getDisable_Extensions():
@@ -1393,9 +1394,9 @@ class ProjectController(ConfigTreeNode, PLCControler):
 
                     if editor_name == "":
                         if len(editors) == 1:
-                            editor_name = editors.keys()[0]
+                            editor_name = list(editors.keys())[0]
                         elif len(editors) > 0:
-                            names = editors.keys()
+                            names = list(editors.keys())
                             dialog = wx.SingleChoiceDialog(
                                 self.AppFrame,
                                 _("Select an editor:"),
@@ -1550,10 +1551,10 @@ class ProjectController(ConfigTreeNode, PLCControler):
                         debug_vars = UnpackDebugBuffer(
                             debug_buff, self.TracedIECTypes)
                         if debug_vars is not None:
-                            for IECPath, values_buffer, value in izip(
+                            for IECPath, values_buffer, value in list(zip(
                                     self.TracedIECPath,
                                     self.DebugValuesBuffers,
-                                    debug_vars):
+                                    debug_vars)):
                                 IECdebug_data = self.IECdebug_datas.get(
                                     IECPath, None)
                                 if IECdebug_data is not None and value is not None:
@@ -1625,7 +1626,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
 
             if Idxs:
                 Idxs.sort()
-                IdxsT = zip(*Idxs)
+                IdxsT = list(zip(*Idxs))
                 self.TracedIECPath = IdxsT[3]
                 self.TracedIECTypes = IdxsT[1]
                 res = self._connector.SetTraceVariablesList(zip(*IdxsT[0:3]))
@@ -1693,7 +1694,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
             else:
                 IECdebug_data[4] = reduce(
                     lambda x, y: x | y,
-                    IECdebug_data[0].itervalues(),
+                    list(IECdebug_data[0].values()),
                     False)
 
         self.AppendDebugUpdate()

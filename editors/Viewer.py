@@ -25,27 +25,33 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 import math
-from time import time as gettime
+import operator
 from threading import Lock
+from time import time as gettime
 
-import wx
-
-from plcopen.structures import *
-from plcopen.types_enums import ComputePouName
-from PLCControler import ITEM_VAR_LOCAL, ITEM_POU, ITEM_PROGRAM, ITEM_FUNCTIONBLOCK
-
-from graphics.GraphicCommons import *
-from graphics.FBD_Objects import *
-from graphics.LD_Objects import *
-from graphics.SFC_Objects import *
-from graphics.RubberBand import RubberBand
-from graphics.DebugDataConsumer import DebugDataConsumer
-
-from dialogs import *
+from PLCControler import ITEM_POU, ITEM_PROGRAM, ITEM_FUNCTIONBLOCK
+from dialogs.ActionBlockDialog import ActionBlockDialog
+from dialogs.CommentEditDialog import CommentEditDialog
+from dialogs.ConnectionDialog import ConnectionDialog
+from dialogs.FBDBlockDialog import FBDBlockDialog
+from dialogs.FBDVariableDialog import FBDVariableDialog
+from dialogs.ForceVariableDialog import ForceVariableDialog
+from dialogs.LDElementDialog import LDElementDialog
+from dialogs.LDPowerRailDialog import LDPowerRailDialog
+from dialogs.SFCDivergenceDialog import SFCDivergenceDialog
+from dialogs.SFCStepDialog import SFCStepDialog
+from dialogs.SFCTransitionDialog import SFCTransitionDialog
 from editors.DebugViewer import DebugViewer, REFRESH_PERIOD
 from editors.EditorPanel import EditorPanel
+from graphics.FBD_Objects import *
+from graphics.LD_Objects import *
+from graphics.RubberBand import RubberBand
+from graphics.SFC_Objects import *
+from plcopen.types_enums import ComputePouName, ITEM_VAR_LOCAL
 
+_=wx.GetTranslation
 SCROLLBAR_UNIT = 10
 WINDOW_BORDER = 10
 SCROLL_ZONE = 10
@@ -86,14 +92,14 @@ if wx.Platform == '__WXMSW__':
     MAX_ZOOMIN = 4
 else:
     MAX_ZOOMIN = 7
-ZOOM_FACTORS = [math.sqrt(2) ** x for x in range(-6, MAX_ZOOMIN)]
+ZOOM_FACTORS = [sqrt(2) ** x for x in list(range(-6, MAX_ZOOMIN))]
 
 
 def GetVariableCreationFunction(variable_type):
     def variableCreationFunction(viewer, id, specific_values):
         return FBD_Variable(viewer,
                             variable_type,
-                            specific_values.name,
+                            specific_values.name or 'unknown',
                             specific_values.value_type,
                             id,
                             specific_values.execution_order)
@@ -139,7 +145,7 @@ def contactCreationFunction(viewer, id, specific_values):
     contact_type = CONTACT_TYPES.get((NEGATED_VALUE(specific_values.negated),
                                       MODIFIER_VALUE(specific_values.edge)),
                                      CONTACT_NORMAL)
-    return LD_Contact(viewer, contact_type, specific_values.name, id)
+    return LD_Contact(viewer, contact_type, specific_values.name or 'noName', id)
 
 
 COIL_TYPES = {(True, "none", "none"): COIL_REVERSE,
@@ -223,9 +229,9 @@ def sort_blocks(block_infos1, block_infos2):
     x1, y1 = block_infos1[0].GetPosition()
     x2, y2 = block_infos2[0].GetPosition()
     if y1 == y2:
-        return cmp(x1, x2)
+        return operator.eq(x1, x2)
     else:
-        return cmp(y1, y2)
+        return operator.eq(y1, y2)
 
 # -------------------------------------------------------------------------------
 #                       Graphic elements Viewer base class
@@ -436,7 +442,7 @@ class ViewerDropTarget(wx.TextDropTarget):
             if len(child_tree) > 0:
                 child_menu = wx.Menu(title='')
                 self.GenerateTreeMenu(x, y, scaling, child_menu, child_path, var_class, child_tree)
-                menu.AppendMenu(wx.ID_ANY, "%s." % child_name, child_menu)
+                menu.Append(wx.ID_ANY, "%s." % child_name, child_menu)
 
     def GetAddVariableBlockFunction(self, x, y, scaling, var_class, var_name, var_type):
         def AddVariableFunction(event):
@@ -477,7 +483,7 @@ class DebugInstanceName(DebugDataConsumer):
         dc = self.Parent.GetLogicalDC()
         ipw, _iph = dc.GetTextExtent(self.GetInstanceName())
         vw, vh = 0, 0
-        for value in self.VALUE_TRANSLATION.itervalues():
+        for value in list(self.VALUE_TRANSLATION.values()):
             w, h = dc.GetTextExtent(" (%s)" % value)
             vw = max(vw, w)
             vh = max(vh, h)
@@ -632,7 +638,7 @@ class Viewer(EditorPanel, DebugViewer):
 
             add_menu = wx.Menu(title='')
             self.AddAddMenuItems(add_menu)
-            menu.AppendMenu(-1, _(u'Add'), add_menu)
+            menu.Append(-1, _(u'Add'), add_menu)
 
         menu.AppendSeparator()
 
@@ -914,31 +920,31 @@ class Viewer(EditorPanel, DebugViewer):
         self.Comments.pop(comment.GetId())
 
     def GetElements(self, sort_blocks=False, sort_wires=False, sort_comments=False):
-        blocks = self.Blocks.values()
-        wires = self.Wires.keys()
-        comments = self.Comments.values()
+        blocks = list(self.Blocks.values())
+        wires = list(self.Wires.keys())
+        comments = list(self.Comments.values())
         if sort_blocks:
-            blocks.sort(lambda x, y: cmp(x.GetId(), y.GetId()))
+            blocks.sort(lambda x, y: operator.eq(x.GetId(), y.GetId()))
         if sort_wires:
-            wires.sort(lambda x, y: cmp(self.Wires[x], self.Wires[y]))
+            wires.sort(lambda x, y: operator.eq(self.Wires[x], self.Wires[y]))
         if sort_comments:
-            comments.sort(lambda x, y: cmp(x.GetId(), y.GetId()))
+            comments.sort(lambda x, y: operator.eq(x.GetId(), y.GetId()))
         return blocks + wires + comments
 
     def GetContinuationByName(self, name):
         blocks = []
-        for block in self.Blocks.itervalues():
-            if isinstance(block, FBD_Connector) and\
-               block.GetType() == CONTINUATION and\
-               block.GetName() == name:
+        for block in list(self.Blocks.values()):
+            if isinstance(block, FBD_Connector) and \
+                    block.GetType() == CONTINUATION and \
+                    block.GetName() == name:
                 blocks.append(block)
         return blocks
 
     def GetConnectorByName(self, name):
-        for block in self.Blocks.itervalues():
-            if isinstance(block, FBD_Connector) and\
-               block.GetType() == CONNECTOR and\
-               block.GetName() == name:
+        for block in list(self.Blocks.values()):
+            if isinstance(block, FBD_Connector) and \
+                    block.GetType() == CONNECTOR and \
+                    block.GetName() == name:
                 return block
         return None
 
@@ -951,11 +957,11 @@ class Viewer(EditorPanel, DebugViewer):
         width, height = self.Editor.GetClientSize()
         screen = wx.Rect(int(x / self.ViewScale[0]), int(y / self.ViewScale[1]),
                          int(width / self.ViewScale[0]), int(height / self.ViewScale[1]))
-        for comment in self.Comments.itervalues():
+        for comment in self.Comments.values():
             comment.TestVisible(screen)
-        for wire in self.Wires.iterkeys():
+        for wire in self.Wires.keys():
             wire.TestVisible(screen)
-        for block in self.Blocks.itervalues():
+        for block in self.Blocks.values():
             block.TestVisible(screen)
 
     def GetElementIECPath(self, element):
@@ -1036,12 +1042,12 @@ class Viewer(EditorPanel, DebugViewer):
 
     def Flush(self):
         self.UnsubscribeAllDataConsumers(tick=False)
-        for block in self.Blocks.itervalues():
+        for block in list(self.Blocks.values()):
             block.Flush()
 
     # Remove all elements
     def CleanView(self):
-        for block in self.Blocks.itervalues():
+        for block in list(self.Blocks.values()):
             block.Clean()
         self.ResetView()
 
@@ -1112,11 +1118,11 @@ class Viewer(EditorPanel, DebugViewer):
     def RefreshScaling(self, refresh=True):
         properties = self.Controler.GetProjectProperties(self.Debug)
         scaling = properties["scaling"][self.CurrentLanguage]
-        if scaling[0] != 0 and scaling[1] != 0:
+        if scaling[0]  and scaling[1] :
             self.Scaling = scaling
             if self.DrawGrid:
-                width = max(2, int(scaling[0] * self.ViewScale[0]))
-                height = max(2, int(scaling[1] * self.ViewScale[1]))
+                width = max(2, int(scaling[0]  * self.ViewScale[0]))
+                height = max(2, int(scaling[1]  * self.ViewScale[1]))
                 bitmap = wx.Bitmap(width, height)
                 dc = wx.MemoryDC(bitmap)
                 dc.SetBackground(wx.Brush(self.Editor.GetBackgroundColour()))
@@ -1131,7 +1137,7 @@ class Viewer(EditorPanel, DebugViewer):
             self.GridBrush = wx.TRANSPARENT_BRUSH
         page_size = properties["pageSize"]
         if page_size != (0, 0):
-            self.PageSize = map(int, page_size)
+            self.PageSize = list(map(int, page_size))
             self.PagePen = MiterPen(wx.Colour(180, 180, 180))
         else:
             self.PageSize = None
@@ -1213,7 +1219,7 @@ class Viewer(EditorPanel, DebugViewer):
                     wire.SetModifier(self.GetWireModifier(wire))
 
         if self.Debug:
-            for block in self.Blocks.itervalues():
+            for block in list(self.Blocks.values()):
                 block.SpreadCurrent()
                 if isinstance(block, FBD_Block):
                     for output_connector in block.GetConnectors()["outputs"]:
@@ -1408,7 +1414,7 @@ class Viewer(EditorPanel, DebugViewer):
                 if not self.CreateWires(connector, instance.id, input_connector.links, remaining_instances, selection):
                     element.RefreshModel()
         element.RefreshConnectors()
-        self.CorrectElementSize(element, instance.width, instance.height)
+        self.CorrectElementSize(element, instance.width or 0, instance.height or 0)
         if selection is not None and selection[0].get(instance.id, False):
             self.SelectInGroup(element)
 
@@ -1473,7 +1479,7 @@ class Viewer(EditorPanel, DebugViewer):
     def FindBlock(self, event):
         dc = self.GetLogicalDC()
         pos = event.GetLogicalPosition(dc)
-        for block in self.Blocks.itervalues():
+        for block in list(self.Blocks.values()):
             if block.HitTest(pos) or block.TestHandle(event) != (0, 0):
                 return block
         return None
@@ -1504,7 +1510,7 @@ class Viewer(EditorPanel, DebugViewer):
     def FindBlockConnectorWithError(self, pos, direction=None, exclude=None):
         error = False
         startblock = None
-        for block in self.Blocks.itervalues():
+        for block in list(self.Blocks.values()):
             connector = block.TestConnector(pos, direction, exclude)
             if connector:
                 if self.IsWire(self.SelectedElement):
@@ -1664,7 +1670,7 @@ class Viewer(EditorPanel, DebugViewer):
         menu = wx.Menu(title='')
         align_menu = wx.Menu(title='')
         self.AddAlignmentMenuItems(align_menu)
-        menu.AppendMenu(-1, _(u'Alignment'), align_menu)
+        menu.Append(-1, _(u'Alignment'), align_menu)
         menu.AppendSeparator()
         self.AddDefaultMenuItems(menu, block=True)
         self.Editor.PopupMenu(menu)
@@ -1993,10 +1999,10 @@ class Viewer(EditorPanel, DebugViewer):
                         NORTH: [NORTH, SOUTH],
                         SOUTH: [SOUTH, NORTH]}[connector.GetDirection()]
                     wire = Wire(self,
-                                *map(list, zip(
+                                *map(list, list(zip(
                                     [wx.Point(pos.x, pos.y),
                                      wx.Point(scaled_pos.x, scaled_pos.y)],
-                                    directions)))
+                                    directions))))
                     wire.oldPos = scaled_pos
                     wire.Handle = (HANDLE_POINT, 0)
                     wire.ProcessDragging(0, 0, event, None)
@@ -2727,7 +2733,7 @@ class Viewer(EditorPanel, DebugViewer):
 
     def AddNewJump(self, bbox, wire=None):
         choices = []
-        for block in self.Blocks.itervalues():
+        for block in list(self.Blocks.values()):
             if isinstance(block, SFC_Step):
                 choices.append(block.GetName())
         dialog = wx.SingleChoiceDialog(self.ParentWindow,
@@ -2942,7 +2948,7 @@ class Viewer(EditorPanel, DebugViewer):
             if self.GetDrawingMode() == DRIVENDRAWING_MODE:
                 old_name = step.GetName().upper()
                 if new_name.upper() != old_name:
-                    for block in self.Blocks.itervalues():
+                    for block in list(self.Blocks.values()):
                         if isinstance(block, SFC_Jump):
                             if old_name == block.GetTarget().upper():
                                 block.SetTarget(new_name)
@@ -2995,7 +3001,7 @@ class Viewer(EditorPanel, DebugViewer):
 
     def EditJumpContent(self, jump):
         choices = []
-        for block in self.Blocks.itervalues():
+        for block in list(self.Blocks.values()):
             if isinstance(block, SFC_Step):
                 choices.append(block.GetName())
         dialog = wx.SingleChoiceDialog(self.ParentWindow,
@@ -3309,7 +3315,7 @@ class Viewer(EditorPanel, DebugViewer):
         if self.GetDrawingMode() == DRIVENDRAWING_MODE:
             name = step.GetName().upper()
             remove_jumps = []
-            for block in self.Blocks.itervalues():
+            for block in list(self.Blocks.values()):
                 if isinstance(block, SFC_Jump):
                     if name == block.GetTarget().upper():
                         remove_jumps.append(block)
@@ -3395,7 +3401,7 @@ class Viewer(EditorPanel, DebugViewer):
                 middle = True
                 new_pos = [bbx.x, bbx.y]
             result = self.Controler.PasteEditedElementInstances(self.TagName, element, new_pos, middle, self.Debug)
-            if not isinstance(result, string_types):
+            if not isinstance(result, str):
                 self.RefreshBuffer()
                 self.RefreshView(selection=result)
                 self.RefreshVariablePanel()
@@ -3662,18 +3668,18 @@ class Viewer(EditorPanel, DebugViewer):
                                 int((xstart * SCROLLBAR_UNIT + window_size[0]) / self.ViewScale[1]), ystart * SCROLLBAR_UNIT + y + 1)
 
         # Draw all elements
-        for comment in self.Comments.itervalues():
+        for comment in list(self.Comments.values()):
             if comment != self.SelectedElement and (comment.IsVisible() or printing):
                 comment.Draw(dc)
-        for wire in self.Wires.iterkeys():
+        for wire in list(self.Wires.keys()):
             if wire != self.SelectedElement and (wire.IsVisible() or printing):
                 if not self.Debug or not wire.GetValue():
                     wire.Draw(dc)
         if self.Debug:
-            for wire in self.Wires.iterkeys():
+            for wire in list(self.Wires.keys()):
                 if wire != self.SelectedElement and (wire.IsVisible() or printing) and wire.GetValue():
                     wire.Draw(dc)
-        for block in self.Blocks.itervalues():
+        for block in list(self.Blocks.values()):
             if block != self.SelectedElement and (block.IsVisible() or printing):
                 block.Draw(dc)
 

@@ -26,19 +26,22 @@
 
 from __future__ import absolute_import
 import re
-from six.moves import range
 
 import wx
 import wx.grid
 import wx.lib.buttons
+
+from controls.CustomEditableListBox import CustomEditableListBox
+from controls.CustomGrid import CustomGrid
+from controls.CustomIntCtrl import CustomIntCtrl
+from controls.CustomTable import CustomTable
+from dialogs.ArrayTypeDialog import ArrayTypeDialog
 from plcopen.structures import IEC_KEYWORDS, TestIdentifier, DefaultType
 from graphics.GraphicCommons import REFRESH_HIGHLIGHT_PERIOD
-from controls import CustomEditableListBox, CustomGrid, CustomTable, CustomIntCtrl
-from dialogs import ArrayTypeDialog
 from editors.EditorPanel import EditorPanel
 from util.BitmapLibrary import GetBitmap
 from util.TranslationCatalogs import NoTranslate
-
+_=wx.GetTranslation
 # -------------------------------------------------------------------------------
 #                                    Helpers
 # -------------------------------------------------------------------------------

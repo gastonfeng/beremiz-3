@@ -360,7 +360,7 @@ class OPCUAClientPanel(wx.SplitterWindow):
 
 
     def CreateSubItems(self, item):
-        node, browsed = self.tree.GetPyData(item)
+        node, browsed = self.tree.GetItemData(item)
         if not browsed:
             for subnode in node.get_children():
                 self.AddNodeItem(lambda n: self.tree.AppendItem(item, n), subnode)
@@ -406,11 +406,11 @@ class OPCUAClientPanel(wx.SplitterWindow):
 
     # def OnActivate(self, evt):
     #     item = evt.GetItem()
-    #     node, browsed = self.tree.GetPyData(item)
+    #     node, browsed = self.tree.GetItemData(item)
 
     def OnTreeNodeSelection(self, event):
         items = self.tree.GetSelections()
-        items_pydata = [self.tree.GetPyData(item) for item in items]
+        items_pydata = [self.tree.GetItemData(item) for item in items]
 
         nodes = [node for node, _unused in items_pydata]
 

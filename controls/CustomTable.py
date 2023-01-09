@@ -27,6 +27,7 @@ from __future__ import absolute_import
 import wx
 import wx.grid
 
+_ = wx.GetTranslation
 if wx.Platform == '__WXMSW__':
     ROW_HEIGHT = 20
 else:
@@ -34,10 +35,10 @@ else:
 
 
 class CustomTable(wx.grid.PyGridTableBase):
-
     """
     A custom wx.grid.Grid Table using user supplied data
     """
+
     def __init__(self, parent, data, colnames):
         # The base class must be initialized *first*
         wx.grid.GridTableBase.__init__(self)
@@ -90,24 +91,24 @@ class CustomTable(wx.grid.PyGridTableBase):
         grid.CloseEditControl()
         grid.BeginBatch()
         for current, new, delmsg, addmsg in [
-                (
+            (
                     self._rows,
                     self.GetNumberRows(),
                     wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED,
                     wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED
-                ),
-                (
+            ),
+            (
                     self._cols,
                     self.GetNumberCols(),
                     wx.grid.GRIDTABLE_NOTIFY_COLS_DELETED,
                     wx.grid.GRIDTABLE_NOTIFY_COLS_APPENDED
-                ),
+            ),
         ]:
             if new < current:
-                msg = wx.grid.GridTableMessage(self, delmsg, new, current-new)
+                msg = wx.grid.GridTableMessage(self, delmsg, new, current - new)
                 grid.ProcessTableMessage(msg)
             elif new > current:
-                msg = wx.grid.GridTableMessage(self, addmsg, new-current)
+                msg = wx.grid.GridTableMessage(self, addmsg, new - current)
                 grid.ProcessTableMessage(msg)
                 self.UpdateValues(grid)
         grid.EndBatch()

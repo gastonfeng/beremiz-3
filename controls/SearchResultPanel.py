@@ -31,10 +31,11 @@ import wx.lib.buttons
 import wx.lib.agw.customtreectrl as CT
 
 from PLCControler import *
+from graphics.GraphicCommons import SEARCH_RESULT_HIGHLIGHT
 from util.BitmapLibrary import GetBitmap
-from plcopen.types_enums import GetElementType
+from plcopen.types_enums import GetElementType, ITEM_CONFNODE
 
-
+_=wx.GetTranslation
 def GenerateName(infos):
     if infos[0] in ["input", "output", "value"]:
         return "%s %d:" % (infos[0], infos[1])

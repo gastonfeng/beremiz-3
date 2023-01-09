@@ -28,9 +28,13 @@ from __future__ import absolute_import
 import wx
 
 from plcopen.structures import LOCATIONDATATYPES
-from PLCControler import LOCATION_CONFNODE, LOCATION_MODULE, LOCATION_GROUP, LOCATION_VAR_INPUT, LOCATION_VAR_OUTPUT, LOCATION_VAR_MEMORY
+from plcopen.types_enums import LOCATION_VAR_INPUT, LOCATION_VAR_OUTPUT, LOCATION_VAR_MEMORY, LOCATION_CONFNODE, \
+    LOCATION_MODULE, LOCATION_GROUP
 from util.BitmapLibrary import GetBitmap
 from util.TranslationCatalogs import NoTranslate
+
+_ = wx.GetTranslation
+
 
 # -------------------------------------------------------------------------------
 #                                   Helpers
@@ -58,6 +62,7 @@ for size, types in LOCATIONDATATYPES.items():
     for type in types:
         LOCATION_SIZES[type] = size
 
+
 # -------------------------------------------------------------------------------
 #                            Browse Locations Dialog
 # -------------------------------------------------------------------------------
@@ -77,7 +82,7 @@ class BrowseLocationsDialog(wx.Dialog):
 
         locations_label = wx.StaticText(self, label=_('Locations available:'))
         main_sizer.Add(locations_label, border=20,
-                             flag=wx.TOP | wx.LEFT | wx.RIGHT | wx.GROW)
+                       flag=wx.TOP | wx.LEFT | wx.RIGHT | wx.GROW)
 
         self.LocationsTree = wx.TreeCtrl(self,
                                          style=(wx.TR_HAS_BUTTONS |
@@ -89,7 +94,7 @@ class BrowseLocationsDialog(wx.Dialog):
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnLocationsTreeItemActivated,
                   self.LocationsTree)
         main_sizer.Add(self.LocationsTree, border=20,
-                             flag=wx.LEFT | wx.RIGHT | wx.GROW)
+                       flag=wx.LEFT | wx.RIGHT | wx.GROW)
 
         self.RenameCheckBox = wx.CheckBox(self, label=_("Rename variable to signal name"))
         self.Config = wx.ConfigBase.Get()
@@ -98,32 +103,32 @@ class BrowseLocationsDialog(wx.Dialog):
         self.do_rename = default_checked
 
         main_sizer.Add(self.RenameCheckBox, border=20,
-                             flag=wx.LEFT | wx.RIGHT | wx.GROW)
+                       flag=wx.LEFT | wx.RIGHT | wx.GROW)
 
         button_gridsizer = wx.FlexGridSizer(cols=5, hgap=5, rows=1, vgap=0)
         button_gridsizer.AddGrowableCol(1)
         button_gridsizer.AddGrowableCol(3)
         button_gridsizer.AddGrowableRow(0)
         main_sizer.Add(button_gridsizer, border=20,
-                            flag=wx.BOTTOM | wx.LEFT | wx.RIGHT | wx.GROW)
+                       flag=wx.BOTTOM | wx.LEFT | wx.RIGHT | wx.GROW)
 
         direction_label = wx.StaticText(self, label=_('Direction:'))
         button_gridsizer.Add(direction_label,
-                                   flag=wx.ALIGN_CENTER_VERTICAL)
+                             flag=wx.ALIGN_CENTER_VERTICAL)
 
         self.DirFilterChoice = wx.ComboBox(self, style=wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnFilterChoice, self.DirFilterChoice)
         button_gridsizer.Add(self.DirFilterChoice,
-                                   flag=wx.GROW | wx.ALIGN_CENTER_VERTICAL)
+                             flag=wx.GROW | wx.ALIGN_CENTER_VERTICAL)
 
         filter_label = wx.StaticText(self, label=_('Type:'))
         button_gridsizer.Add(filter_label,
-                                   flag=wx.ALIGN_CENTER_VERTICAL)
+                             flag=wx.ALIGN_CENTER_VERTICAL)
 
         self.TypeFilterChoice = wx.ComboBox(self, style=wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnFilterChoice, self.TypeFilterChoice)
         button_gridsizer.Add(self.TypeFilterChoice,
-                                   flag=wx.GROW | wx.ALIGN_CENTER_VERTICAL)
+                             flag=wx.GROW | wx.ALIGN_CENTER_VERTICAL)
 
         button_sizer = self.CreateButtonSizer(wx.OK | wx.CANCEL | wx.CENTRE)
         self.Bind(wx.EVT_BUTTON, self.OnOK, wx.FindWindowById(wx.ID_OK, self))
@@ -143,12 +148,12 @@ class BrowseLocationsDialog(wx.Dialog):
 
         # Icons for items
         for imgname, itemtype in [
-                ("CONFIGURATION", LOCATION_CONFNODE),
-                ("RESOURCE",      LOCATION_MODULE),
-                ("PROGRAM",       LOCATION_GROUP),
-                ("VAR_INPUT",     LOCATION_VAR_INPUT),
-                ("VAR_OUTPUT",    LOCATION_VAR_OUTPUT),
-                ("VAR_LOCAL",     LOCATION_VAR_MEMORY)]:
+            ("CONFIGURATION", LOCATION_CONFNODE),
+            ("RESOURCE", LOCATION_MODULE),
+            ("PROGRAM", LOCATION_GROUP),
+            ("VAR_INPUT", LOCATION_VAR_INPUT),
+            ("VAR_OUTPUT", LOCATION_VAR_OUTPUT),
+            ("VAR_LOCAL", LOCATION_VAR_MEMORY)]:
             self.TreeImageDict[itemtype] = self.TreeImageList.Add(GetBitmap(imgname))
 
         # Assign icon list to TreeCtrls
@@ -195,8 +200,8 @@ class BrowseLocationsDialog(wx.Dialog):
         item, root_cookie = self.LocationsTree.GetFirstChild(root)
         for loc_infos in locations:
             infos = loc_infos.copy()
-            if infos["type"] in [LOCATION_CONFNODE, LOCATION_MODULE, LOCATION_GROUP] or\
-               infos["type"] in self.DirFilter and self.FilterType(infos["IEC_type"], infos["size"]):
+            if infos["type"] in [LOCATION_CONFNODE, LOCATION_MODULE, LOCATION_GROUP] or \
+                    infos["type"] in self.DirFilter and self.FilterType(infos["IEC_type"], infos["size"]):
                 children = [child for child in infos.pop("children")]
                 if not item.IsOk():
                     item = self.LocationsTree.AppendItem(root, infos["name"])

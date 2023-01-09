@@ -26,35 +26,42 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-import os
-import sys
-import shutil
-import time
-import signal
-from time import time as gettime
-from threading import Lock, Timer, currentThread
 
-from six.moves import cPickle, range
+import os
+import pickle
+import time
+from threading import Lock, Timer, currentThread
+from time import time as gettime
+
 import wx.lib.buttons
 import wx.lib.statbmp
 import wx.stc
-import wx.adv
-
 
 import version
-from editors.EditorPanel import EditorPanel
-from editors.Viewer import Viewer
-from editors.TextViewer import TextViewer
-from editors.ResourceEditor import ConfigurationEditor, ResourceEditor
-from editors.DataTypeEditor import DataTypeEditor
-from util.paths import Bpath
-from util.MiniTextControler import MiniTextControler
-from util.BitmapLibrary import GetBitmap
-from controls.LogViewer import LogViewer
-from controls.CustomStyledTextCtrl import CustomStyledTextCtrl
+from IDEFrame import \
+    TITLE, \
+    EDITORTOOLBAR, \
+    FILEMENU, \
+    EDITMENU, \
+    DISPLAYMENU, \
+    PROJECTTREE, \
+    POUINSTANCEVARIABLESPANEL, \
+    LIBRARYTREE, \
+    PAGETITLES, \
+    IDEFrame, \
+    EncodeFileSystemPath, \
+    DecodeFileSystemPath
+from LocalRuntimeMixin import LocalRuntimeMixin
+from ProjectController import ProjectController, GetAddMenuItems, MATIEC_ERROR_MODEL
 from controls import EnhancedStatusBar as esb
+from controls.CustomStyledTextCtrl import CustomStyledTextCtrl
+from controls.LogViewer import LogViewer
 from dialogs.AboutDialog import ShowAboutDialog
-
+from editors.DataTypeEditor import DataTypeEditor
+from editors.EditorPanel import EditorPanel
+from editors.ResourceEditor import ConfigurationEditor, ResourceEditor
+from editors.TextViewer import TextViewer
+from editors.Viewer import Viewer
 from plcopen.types_enums import \
     ComputeConfigurationName, \
     LOCATION_CONFNODE, \
@@ -66,26 +73,11 @@ from plcopen.types_enums import \
     ITEM_PROJECT, \
     ITEM_RESOURCE, \
     ITEM_CONFNODE
+from util.BitmapLibrary import GetBitmap
+from util.MiniTextControler import MiniTextControler
+from util.paths import Bpath
 
-from ProjectController import ProjectController, GetAddMenuItems, MATIEC_ERROR_MODEL
-
-from IDEFrame import \
-    TITLE,\
-    EDITORTOOLBAR,\
-    FILEMENU,\
-    EDITMENU,\
-    DISPLAYMENU,\
-    PROJECTTREE,\
-    POUINSTANCEVARIABLESPANEL,\
-    LIBRARYTREE,\
-    PAGETITLES,\
-    IDEFrame, \
-    EncodeFileSystemPath, \
-    DecodeFileSystemPath
-
-from LocalRuntimeMixin import LocalRuntimeMixin
-
-
+_=wx.GetTranslation
 def AppendMenu(parent, help, id, kind, text):
     return parent.Append(wx.MenuItem(helpString=help, id=id, kind=kind, text=text))
 
@@ -159,7 +151,7 @@ class LogPseudoFile(object):
             app = wx.GetApp()
             if app is not None:
                 self._write()
-                if self.YieldLock.acquire(0):
+                if self.YieldLock.acquire(False):
                     app.Yield()
                     self.YieldLock.release()
         else:
@@ -226,7 +218,7 @@ class LogPseudoFile(object):
         self.output.AnnotationSetText(l, text)
         self.output.AnnotationSetVisible(wx.stc.STC_ANNOTATION_BOXED)
         self.output.AnnotationSetStyle(l, self.black_white)
-        if self.YieldLock.acquire(0):
+        if self.YieldLock.acquire(False):
             app = wx.GetApp()
             app.Yield()
             self.YieldLock.release()
@@ -700,8 +692,8 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
 
     def RefreshRecentProjectsMenu(self):
         try:
-            recent_projects = map(DecodeFileSystemPath,
-                                  self.GetConfigEntry("RecentProjects", []))
+            txt = self.GetConfigEntry("RecentProjects", [])
+            recent_projects = list(map(DecodeFileSystemPath, txt))
         except Exception:
             recent_projects = []
 
@@ -727,17 +719,17 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
     def GenerateMenuRecursive(self, items, menu):
         for kind, infos in items:
             if isinstance(kind, list):
-                text, id = infos
+                text, Id = infos
                 submenu = wx.Menu('')
                 self.GenerateMenuRecursive(kind, submenu)
-                menu.AppendMenu(id, text, submenu)
+                menu.AppendMenu(Id, text, submenu)
             elif kind == wx.ITEM_SEPARATOR:
                 menu.AppendSeparator()
             else:
-                text, id, _help, callback = infos
-                AppendMenu(menu, help='', id=id, kind=kind, text=text)
+                text, Id, _help, callback = infos
+                AppendMenu(menu, help='', id=Id, kind=kind, text=text)
                 if callback is not None:
-                    self.Bind(wx.EVT_MENU, callback, id=id)
+                    self.Bind(wx.EVT_MENU, callback, id=Id)
 
     def RefreshEditorToolBar(self):
         IDEFrame.RefreshEditorToolBar(self)
@@ -824,7 +816,9 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
         return OnMenu
 
     def GetConfigEntry(self, entry_name, default):
-        return cPickle.loads(str(self.Config.Read(entry_name, cPickle.dumps(default))))
+        dv = pickle.dumps(default, 0).decode()
+        tt = self.Config.Read(entry_name, dv).encode()
+        return pickle.loads(tt)
 
     def ResetConnectionStatusBar(self):
         for field in range(self.ConnectionStatusBar.GetFieldsCount()):
@@ -842,16 +836,18 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
 
     def RefreshConfigRecentProjects(self, projectpath, err=False):
         try:
-            recent_projects = map(DecodeFileSystemPath,
-                                  self.GetConfigEntry("RecentProjects", []))
+            recent_projects = list(map(DecodeFileSystemPath,
+                                       self.GetConfigEntry("RecentProjects", [])))
         except Exception:
             recent_projects = []
         if projectpath in recent_projects:
             recent_projects.remove(projectpath)
         if not err:
             recent_projects.insert(0, projectpath)
-        self.Config.Write("RecentProjects", cPickle.dumps(
-            map(EncodeFileSystemPath, recent_projects[:MAX_RECENT_PROJECTS])))
+        txt = list(map(EncodeFileSystemPath, recent_projects[:MAX_RECENT_PROJECTS]))
+        tt = pickle.dumps(txt, 0)
+        # tt = str(txt)
+        self.Config.Write("RecentProjects", tt)
         self.Config.Flush()
 
     def ResetPerspective(self):
@@ -987,14 +983,14 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
 
     def OnProjectTreeItemBeginEdit(self, event):
         selected = event.GetItem()
-        if self.ProjectTree.GetPyData(selected)["type"] == ITEM_CONFNODE:
+        if self.ProjectTree.GetItemData(selected)["type"] == ITEM_CONFNODE:
             event.Veto()
         else:
             IDEFrame.OnProjectTreeItemBeginEdit(self, event)
 
     def OnProjectTreeRightUp(self, event):
         item = event.GetItem()
-        item_infos = self.ProjectTree.GetPyData(item)
+        item_infos = self.ProjectTree.GetItemData(item)
 
         if item_infos["type"] == ITEM_CONFNODE:
             confnode_menu = wx.Menu(title='')
@@ -1030,7 +1026,7 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
 
     def OnProjectTreeItemActivated(self, event):
         selected = event.GetItem()
-        item_infos = self.ProjectTree.GetPyData(selected)
+        item_infos = self.ProjectTree.GetItemData(selected)
         if item_infos["type"] == ITEM_CONFNODE:
             item_infos["confnode"]._OpenView()
             event.Skip()
@@ -1041,7 +1037,7 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
 
     def ProjectTreeItemSelect(self, select_item):
         if select_item is not None and select_item.IsOk():
-            item_infos = self.ProjectTree.GetPyData(select_item)
+            item_infos = self.ProjectTree.GetItemData(select_item)
             if item_infos["type"] == ITEM_CONFNODE:
                 item_infos["confnode"]._OpenView(onlyopened=True)
             elif item_infos["type"] == ITEM_PROJECT:

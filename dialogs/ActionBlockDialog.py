@@ -28,10 +28,12 @@ import wx
 import wx.grid
 import wx.lib.buttons
 
-from controls import CustomGrid, CustomTable
+from controls.CustomGrid import CustomGrid
+from controls.CustomTable import CustomTable
 from plcopen.BlockInstanceCollector import _ActionInfos
 from util.BitmapLibrary import GetBitmap
 from util.TranslationCatalogs import NoTranslate
+_=wx.GetTranslation
 # -------------------------------------------------------------------------------
 #                                  Helpers
 # -------------------------------------------------------------------------------

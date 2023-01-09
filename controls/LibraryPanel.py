@@ -173,7 +173,7 @@ class LibraryPanel(wx.Panel):
 
             # Get current selected item for selected it when values refreshed
             selected_item = self.Tree.GetSelection()
-            selected_pydata = (self.Tree.GetPyData(selected_item)
+            selected_pydata = (self.Tree.GetItemData(selected_item)
                                if (selected_item.IsOk() and
                                    selected_item != self.Tree.GetRootItem())
                                else None)
@@ -298,7 +298,7 @@ class LibraryPanel(wx.Panel):
         """
         # Get selected item associated data in tree
         selected_item = self.Tree.GetSelection()
-        selected_pydata = (self.Tree.GetPyData(selected_item)
+        selected_pydata = (self.Tree.GetItemData(selected_item)
                            if (selected_item.IsOk() and
                                selected_item != self.Tree.GetRootItem())
                            else None)
@@ -336,7 +336,7 @@ class LibraryPanel(wx.Panel):
             return None
 
         # Get data associated to item to test
-        item_pydata = self.Tree.GetPyData(item)
+        item_pydata = self.Tree.GetItemData(item)
         if item_pydata is not None and item_pydata["type"] == BLOCK:
             # Only test item corresponding to block
 
@@ -402,7 +402,7 @@ class LibraryPanel(wx.Panel):
         while item.IsOk():
 
             # Get item data to get item type
-            item_pydata = self.Tree.GetPyData(item)
+            item_pydata = self.Tree.GetItemData(item)
 
             # Item is a block category
             if (item == root) or item_pydata["type"] == CATEGORY:
@@ -467,7 +467,7 @@ class LibraryPanel(wx.Panel):
         @param event: wx.TreeEvent
         """
         # Update TextCtrl value with block selected usage
-        item_pydata = self.Tree.GetPyData(event.GetItem())
+        item_pydata = self.Tree.GetItemData(event.GetItem())
         self.Comment.SetValue(
             item_pydata["comment"]
             if item_pydata is not None and item_pydata["type"] == BLOCK
@@ -485,7 +485,7 @@ class LibraryPanel(wx.Panel):
         @param event: wx.TreeEvent
         """
         selected_item = event.GetItem()
-        item_pydata = self.Tree.GetPyData(selected_item)
+        item_pydata = self.Tree.GetItemData(selected_item)
 
         # Item dragged is a block
         if item_pydata is not None and item_pydata["type"] == BLOCK:

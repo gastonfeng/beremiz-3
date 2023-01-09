@@ -25,17 +25,15 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
+import datetime
 import os
 import re
-import datetime
+from collections import OrderedDict
 from functools import reduce
 from xml.dom import minidom
 from xml.sax.saxutils import unescape
-from collections import OrderedDict
-from builtins import str as text
 
-from six import string_types
-from six.moves import range
 from lxml import etree
 
 
@@ -1741,7 +1739,9 @@ class DefaultElementClass(etree.ElementBase):
         return etree.QName(self.tag).localname
 
     def tostring(self):
-        return NAMESPACE_PATTERN.sub("", etree.tostring(self, pretty_print=True, encoding='utf-8')).decode('utf-8')
+        xml = etree.tostring(self, pretty_print=True, encoding='utf-8').decode('utf-8')
+        y = NAMESPACE_PATTERN.sub("", xml)
+        return y
 
     def getElementInfos(self, name, path=None, derived=False):
         return {"name": name, "type": TAG, "value": None, "use": None, "children": []}

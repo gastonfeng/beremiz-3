@@ -28,10 +28,7 @@
 from __future__ import absolute_import
 
 from dialogs.CommentEditDialog import CommentEditDialog
-from dialogs.ConnectionDialog import ConnectionDialog
 from dialogs.ActionBlockDialog import ActionBlockDialog
-from dialogs.FBDBlockDialog import FBDBlockDialog
-from dialogs.FBDVariableDialog import FBDVariableDialog
 from dialogs.LDElementDialog import LDElementDialog
 from dialogs.LDPowerRailDialog import LDPowerRailDialog
 from dialogs.SFCStepDialog import SFCStepDialog

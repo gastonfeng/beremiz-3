@@ -27,10 +27,11 @@
 from __future__ import absolute_import
 import wx
 
-from graphics.GraphicCommons import CONNECTOR, CONTINUATION
 from graphics.FBD_Objects import FBD_Connector
 from dialogs.BlockPreviewDialog import BlockPreviewDialog
+from graphics.GraphicCommons import CONNECTOR, CONTINUATION
 
+_=wx.GetTranslation
 # -------------------------------------------------------------------------------
 #                       Set Connection Parameters Dialog
 # -------------------------------------------------------------------------------

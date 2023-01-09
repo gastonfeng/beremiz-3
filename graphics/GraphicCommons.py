@@ -25,7 +25,9 @@
 
 from __future__ import absolute_import
 from __future__ import division
-from math import *
+
+from math import sqrt
+
 from six import string_types
 
 import wx

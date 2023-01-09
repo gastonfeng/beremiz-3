@@ -24,14 +24,17 @@
 
 
 from __future__ import absolute_import
+
 import os
-from six.moves import range
 
-from modbus.mb_utils import *
-from ConfigTreeNode import ConfigTreeNode
-from PLCControler import LOCATION_CONFNODE, LOCATION_VAR_MEMORY
+import wx
+
 import util.paths as paths
+from ConfigTreeNode import ConfigTreeNode
+from modbus import mb_utils
+from plcopen.types_enums import LOCATION_VAR_MEMORY, LOCATION_CONFNODE
 
+_=wx.GetTranslation
 ModbusPath = paths.ThirdPartyPath("Modbus")
 
 
@@ -94,9 +97,9 @@ class _RequestPlug(object):
             if element["name"] == "ModbusRequest":
                 for child in element["children"]:
                     if child["name"] == "Function":
-                        list = modbus_function_dict.keys()
-                        list.sort()
-                        child["type"] = list
+                        List = mb_utils.modbus_function_dict.keys()
+                        List.sort()
+                        child["type"] = List
         return infos
 
     def GetVariableLocationTree(self):
@@ -106,15 +109,15 @@ class _RequestPlug(object):
         count = self.GetParamsAttributes()[0]["children"][2]["value"]
         function = self.GetParamsAttributes()[0]["children"][0]["value"]
         # 'BOOL' or 'WORD'
-        datatype = modbus_function_dict[function][3]
+        datatype = mb_utils.modbus_function_dict[function][3]
         # 1 or 16
-        datasize = modbus_function_dict[function][4]
+        datasize = mb_utils.modbus_function_dict[function][4]
         # 'Q' for coils and holding registers, 'I' for input discretes and input registers
         # datazone = modbus_function_dict[function][5]
         # 'X' for bits, 'W' for words
-        datatacc = modbus_function_dict[function][6]
+        datatacc = mb_utils.modbus_function_dict[function][6]
         # 'Coil', 'Holding Register', 'Input Discrete' or 'Input Register'
-        dataname = modbus_function_dict[function][7]
+        dataname = mb_utils.modbus_function_dict[function][7]
         # start off with a boolean entry
         # This is a flag used to allow the user program to control when to 
         # execute the Modbus request.
@@ -598,11 +601,11 @@ class _ModbusRTUclientPlug(object):
             if element["name"] == "ModbusRTUclient":
                 for child in element["children"]:
                     if child["name"] == "Baud_Rate":
-                        child["type"] = modbus_serial_baudrate_list
+                        child["type"] = mb_utils.modbus_serial_baudrate_list
                     if child["name"] == "Stop_Bits":
-                        child["type"] = modbus_serial_stopbits_list
+                        child["type"] = mb_utils.modbus_serial_stopbits_list
                     if child["name"] == "Parity":
-                        child["type"] = modbus_serial_parity_dict.keys()
+                        child["type"] = mb_utils.modbus_serial_parity_dict.keys()
         return infos
 
     # Return the number of (modbus library) nodes this specific RTU client will need
@@ -689,11 +692,11 @@ class _ModbusRTUslavePlug(object):
             if element["name"] == "ModbusRTUslave":
                 for child in element["children"]:
                     if child["name"] == "Baud_Rate":
-                        child["type"] = modbus_serial_baudrate_list
+                        child["type"] = mb_utils.modbus_serial_baudrate_list
                     if child["name"] == "Stop_Bits":
-                        child["type"] = modbus_serial_stopbits_list
+                        child["type"] = mb_utils.modbus_serial_stopbits_list
                     if child["name"] == "Parity":
-                        child["type"] = modbus_serial_parity_dict.keys()
+                        child["type"] = mb_utils.modbus_serial_parity_dict.keys()
         return infos
 
     # Return the number of (modbus library) nodes this specific RTU slave will need
@@ -966,7 +969,7 @@ class RootClass(object):
             #
             if child.PlugType == "ModbusTCPserver":
                 tcpserver_node_count += 1
-                new_node = GetTCPServerNodePrinted(self, child)
+                new_node = mb_utils.GetTCPServerNodePrinted(self, child)
                 if new_node is None:
                     return [], "", False
                 server_node_list.append(new_node)                
@@ -996,7 +999,7 @@ class RootClass(object):
                             loc_vars_list.append(str(iecvar["NAME"]))
                 
                 for subchild in child.IECSortedChildren():
-                    new_memarea = GetTCPServerMemAreaPrinted(self, subchild, nodeid)
+                    new_memarea = mb_utils.GetTCPServerMemAreaPrinted(self, subchild, nodeid)
                     if new_memarea is None:
                         return [], "", False
                     server_memarea_list.append(new_memarea)
@@ -1007,10 +1010,10 @@ class RootClass(object):
                         if len(iecvar["LOC"]) == 4:
                             #print "subchild" + repr(iecvar)
                             absloute_address = iecvar["LOC"][3]
-                            start_address = int(GetCTVal(subchild, 2))
+                            start_address = int(mb_utils.GetCTVal(subchild, 2))
                             relative_addr = absloute_address - start_address
                             # test if relative address in request specified range
-                            if relative_addr in range(int(GetCTVal(subchild, 1))):
+                            if relative_addr in range(int(mb_utils.GetCTVal(subchild, 1))):
                                 if str(iecvar["NAME"]) not in loc_vars_list:
                                     loc_vars.append("u16 *" + str(iecvar["NAME"]) + " = &server_nodes[%d].mem_area.%s[%d];" % (
                                         server_id, memarea, absloute_address))
@@ -1019,7 +1022,7 @@ class RootClass(object):
             #
             if child.PlugType == "ModbusRTUslave":
                 rtuserver_node_count += 1
-                new_node = GetRTUSlaveNodePrinted(self, child)
+                new_node = mb_utils.GetRTUSlaveNodePrinted(self, child)
                 if new_node is None:
                     return [], "", False
                 server_node_list.append(new_node)
@@ -1049,7 +1052,7 @@ class RootClass(object):
                             loc_vars_list.append(str(iecvar["NAME"]))
 
                 for subchild in child.IECSortedChildren():
-                    new_memarea = GetTCPServerMemAreaPrinted(
+                    new_memarea = mb_utils.GetTCPServerMemAreaPrinted(
                         self, subchild, nodeid)
                     if new_memarea is None:
                         return [], "", False
@@ -1061,10 +1064,10 @@ class RootClass(object):
                         if len(iecvar["LOC"]) == 4:
                             # print repr(iecvar)
                             absloute_address = iecvar["LOC"][3]
-                            start_address = int(GetCTVal(subchild, 2))
+                            start_address = int(mb_utils.GetCTVal(subchild, 2))
                             relative_addr = absloute_address - start_address
                             # test if relative address in request specified range
-                            if relative_addr in range(int(GetCTVal(subchild, 1))):
+                            if relative_addr in range(int(mb_utils.GetCTVal(subchild, 1))):
                                 if str(iecvar["NAME"]) not in loc_vars_list:
                                     loc_vars.append("u16 *" + str(iecvar["NAME"]) + " = &server_nodes[%d].mem_area.%s[%d];" % (
                                         server_id, memarea, absloute_address))
@@ -1073,19 +1076,19 @@ class RootClass(object):
             #
             if child.PlugType == "ModbusTCPclient":
                 tcpclient_reqs_count += len(child.IECSortedChildren())
-                new_node = GetTCPClientNodePrinted(self, child)
+                new_node = mb_utils.GetTCPClientNodePrinted(self, child)
                 if new_node is None:
                     return [], "", False
                 client_node_list.append(new_node)
                 for subchild in child.IECSortedChildren():
-                    new_req = GetClientRequestPrinted(
+                    new_req = mb_utils.GetClientRequestPrinted(
                         self, subchild, client_nodeid)
                     if new_req is None:
                         return [], "", False
                     client_request_list.append(new_req)
                     for iecvar in subchild.GetLocations():
                         # absloute address - start address
-                        relative_addr = iecvar["LOC"][3] - int(GetCTVal(subchild, 3))
+                        relative_addr = iecvar["LOC"][3] - int(mb_utils.GetCTVal(subchild, 3))
                         # test if the located variable 
                         #    (a) has relative address in request specified range
                         #  AND is NOT
@@ -1100,7 +1103,7 @@ class RootClass(object):
                         #        two numbers are always '0.0', and the first two identify the request.
                         #        In the following if, we check for this condition by checking
                         #        if there are at least 4 or more number in the location's address.
-                        if (        relative_addr in range(int(GetCTVal(subchild, 2)))  # condition (a) explained above
+                        if (        relative_addr in range(int(mb_utils.GetCTVal(subchild, 2)))  # condition (a) explained above
                             and len(iecvar["LOC"]) < 5):                                  # condition (b) explained above
                             if str(iecvar["NAME"]) not in loc_vars_list:
                                 loc_vars.append("u16 *" + str(iecvar["NAME"]) + " = &client_requests[%d].plcv_buffer[%d];" % (client_requestid, relative_addr))
@@ -1134,19 +1137,19 @@ class RootClass(object):
             #
             if child.PlugType == "ModbusRTUclient":
                 rtuclient_reqs_count += len(child.IECSortedChildren())
-                new_node = GetRTUClientNodePrinted(self, child)
+                new_node = mb_utils.GetRTUClientNodePrinted(self, child)
                 if new_node is None:
                     return [], "", False
                 client_node_list.append(new_node)
                 for subchild in child.IECSortedChildren():
-                    new_req = GetClientRequestPrinted(
+                    new_req = mb_utils.GetClientRequestPrinted(
                         self, subchild, client_nodeid)
                     if new_req is None:
                         return [], "", False
                     client_request_list.append(new_req)
                     for iecvar in subchild.GetLocations():
                         # absloute address - start address
-                        relative_addr = iecvar["LOC"][3] - int(GetCTVal(subchild, 3))
+                        relative_addr = iecvar["LOC"][3] - int(mb_utils.GetCTVal(subchild, 3))
                         # test if the located variable 
                         #    (a) has relative address in request specified range
                         #  AND is NOT
@@ -1161,7 +1164,7 @@ class RootClass(object):
                         #        two numbers are always '0.0', and the first two identify the request.
                         #        In the following if, we check for this condition by checking
                         #        if there are at least 4 or more number in the location's address.
-                        if (        relative_addr in range(int(GetCTVal(subchild, 2)))  # condition (a) explained above
+                        if (        relative_addr in range(int(mb_utils.GetCTVal(subchild, 2)))  # condition (a) explained above
                             and len(iecvar["LOC"]) < 5):                                  # condition (b) explained above
                             if str(iecvar["NAME"]) not in loc_vars_list:
                                 loc_vars.append(

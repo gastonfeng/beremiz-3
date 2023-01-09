@@ -26,15 +26,15 @@
 from __future__ import absolute_import
 from __future__ import division
 import wx
-from six.moves import range
-
-from graphics.GraphicCommons import *
-from plcopen.structures import *
-
 
 # -------------------------------------------------------------------------------
 #                         Function Block Diagram Block
 # -------------------------------------------------------------------------------
+from graphics.GraphicCommons import Graphic_Element, MiterPen, CONNECTOR_SIZE, BLOCK_LINE_SIZE, round_scaling, \
+    Connector, WEST, EAST, HANDLE_CONNECTOR, GetScaledEventPosition, AddHighlight, RemoveHighlight, ClearHighlights, \
+    DrawHighlightedText, OUTPUT, INOUT, INPUT, CONNECTOR, CONTINUATION
+
+_ = wx.GetTranslation
 
 
 def TestConnectorName(name, block_type):
@@ -47,7 +47,8 @@ class FBD_Block(Graphic_Element):
     """
 
     # Create a new block
-    def __init__(self, parent, type, name, id=None, extension=0, inputs=None, connectors=None, executionControl=False, executionOrder=0):
+    def __init__(self, parent, type, name, id=None, extension=0, inputs=None, connectors=None, executionControl=False,
+                 executionOrder=0):
         Graphic_Element.__init__(self, parent)
         self.Type = None
         self.Description = None
@@ -167,7 +168,7 @@ class FBD_Block(Graphic_Element):
             position = BLOCK_LINE_SIZE + linesize // 2
             for i in range(lines):
                 if scaling is not None:
-                    ypos = round_scaling(self.Pos.y + position, scaling[1]) - self.Pos.y
+                    ypos = round_scaling(self.Pos.y + position, scaling[1] or 10) - self.Pos.y
                 else:
                     ypos = position
                 if i < len(self.Inputs):
@@ -268,8 +269,8 @@ class FBD_Block(Graphic_Element):
                 outputs = connectors.get("outputs", [])
                 self.Description = None
             if self.ExecutionControl:
-                inputs.insert(0,  ("EN",   "BOOL", "none"))
-                outputs.insert(0, ("ENO",  "BOOL", "none"))
+                inputs.insert(0, ("EN", "BOOL", "none"))
+                outputs.insert(0, ("ENO", "BOOL", "none"))
             self.Pen = MiterPen(self.Colour)
 
             # Extract the inputs properties and create or modify the corresponding connector
@@ -386,17 +387,17 @@ class FBD_Block(Graphic_Element):
             handle.SetEdge(edge)
             self.RefreshModel(False)
 
-#    # Method called when a Motion event have been generated
-#    def OnMotion(self, event, dc, scaling):
-#        if not event.Dragging():
-#            pos = event.GetLogicalPosition(dc)
-#            for input in self.Inputs:
-#                rect = input.GetRedrawRect()
-#                if rect.Contains(pos.x, pos.y):
-#                    print "Find input"
-#                    tip = wx.TipWindow(self.Parent, "Test")
-#                    tip.SetBoundingRect(rect)
-#        return Graphic_Element.OnMotion(self, event, dc, scaling)
+    #    # Method called when a Motion event have been generated
+    #    def OnMotion(self, event, dc, scaling):
+    #        if not event.Dragging():
+    #            pos = event.GetLogicalPosition(dc)
+    #            for input in self.Inputs:
+    #                rect = input.GetRedrawRect()
+    #                if rect.Contains(pos.x, pos.y):
+    #                    print "Find input"
+    #                    tip = wx.TipWindow(self.Parent, "Test")
+    #                    tip.SetBoundingRect(rect)
+    #        return Graphic_Element.OnMotion(self, event, dc, scaling)
 
     # Method called when a LeftDClick event have been generated
     def OnLeftDClick(self, event, dc, scaling):
@@ -606,7 +607,7 @@ class FBD_Variable(Graphic_Element):
     def RefreshConnectors(self):
         scaling = self.Parent.GetScaling()
         if scaling is not None:
-            position = round_scaling(self.Pos.y + self.Size[1] // 2, scaling[1]) - self.Pos.y
+            position = round_scaling(self.Pos.y + self.Size[1] // 2, scaling[1] or 10) - self.Pos.y
         else:
             position = self.Size[1] // 2
         if self.Input:
@@ -904,6 +905,7 @@ class FBD_Connector(Graphic_Element):
         return self.Connector
 
         # Returns all the block connectors
+
     def GetConnectors(self):
         connectors = {"inputs": [], "outputs": []}
         if self.Type == CONNECTOR:

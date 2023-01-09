@@ -33,18 +33,31 @@ import datetime
 from time import localtime
 from functools import reduce
 
+import wx
+
+import PLCGenerator
 import util.paths as paths
-from plcopen import *
-from plcopen.types_enums import *
+from PLCGenerator import GenerateCurrentProgram, PLCGenException
+from graphics.GraphicCommons import INPUT, OUTPUT, INOUT, CONNECTOR, CONTINUATION, LEFTRAIL, RIGHTRAIL, CONTACT_NORMAL, \
+    CONTACT_REVERSE, CONTACT_RISING, CONTACT_FALLING, COIL_NORMAL, COIL_REVERSE, COIL_SET, COIL_RESET, COIL_RISING, \
+    COIL_FALLING, SELECTION_DIVERGENCE, SELECTION_CONVERGENCE, SIMULTANEOUS_DIVERGENCE, SIMULTANEOUS_CONVERGENCE
+from plcopen import QualifierList, PLCOpenParser, LoadPou, LoadPouInstances, rect, SaveProject, LoadProject
 from plcopen.InstancesPathCollector import InstancesPathCollector
 from plcopen.POUVariablesCollector import POUVariablesCollector
 from plcopen.InstanceTagnameCollector import InstanceTagnameCollector
 from plcopen.BlockInstanceCollector import BlockInstanceCollector
 from plcopen.VariableInfoCollector import VariableInfoCollector
-from graphics.GraphicCommons import *
-from PLCGenerator import *
+from plcopen.definitions import TypeHierarchy_list
+from plcopen.structures import StdBlckDct, StdBlckLst, section, TypeHierarchy, DataTypeRange, GetSubTypes
+from plcopen.types_enums import ITEM_PROJECT, DATA_TYPES, ITEM_DATATYPES, ComputeDataTypeName, FUNCTIONS, ITEM_FUNCTION, \
+    FUNCTION_BLOCKS, ITEM_FUNCTIONBLOCK, ITEM_DATATYPE, PROGRAMS, ITEM_PROGRAM, ITEM_POU, ComputePouName, \
+    ITEM_TRANSITION, ComputePouTransitionName, TRANSITIONS, ITEM_ACTION, ComputePouActionName, ACTIONS, ITEM_ACTIONS, \
+    ITEM_TRANSITIONS, CONFIGURATIONS, ITEM_CONFIGURATIONS, ITEM_CONFIGURATION, ComputeConfigurationName, RESOURCES, \
+    ITEM_RESOURCES, ITEM_RESOURCE, ComputeConfigurationResourceName, VAR_CLASS_INFOS, USER_DEFINED_POUS
 
-duration_model = re.compile(r"(?:([0-9]{1,2})h)?(?:([0-9]{1,2})m(?!s))?(?:([0-9]{1,2})s)?(?:([0-9]{1,3}(?:\.[0-9]*)?)ms)?")
+_ = wx.GetTranslation
+duration_model = re.compile(
+    r"(?:([0-9]{1,2})h)?(?:([0-9]{1,2})m(?!s))?(?:([0-9]{1,2})s)?(?:([0-9]{1,3}(?:\.[0-9]*)?)ms)?")
 VARIABLE_NAME_SUFFIX_MODEL = re.compile(r'(\d+)$')
 
 ScriptDirectory = paths.AbsDir(__file__)
@@ -306,18 +319,18 @@ class PLCControler(object):
                     "values": []})
             pou_types = {
                 "function": {
-                    "name":   FUNCTIONS,
-                    "type":   ITEM_FUNCTION,
+                    "name": FUNCTIONS,
+                    "type": ITEM_FUNCTION,
                     "values": []
                 },
                 "functionBlock": {
-                    "name":   FUNCTION_BLOCKS,
-                    "type":   ITEM_FUNCTIONBLOCK,
+                    "name": FUNCTION_BLOCKS,
+                    "type": ITEM_FUNCTIONBLOCK,
                     "values": []
                 },
                 "program": {
-                    "name":   PROGRAMS,
-                    "type":   ITEM_PROGRAM,
+                    "name": PROGRAMS,
+                    "type": ITEM_PROGRAM,
                     "values": []
                 }
             }
@@ -400,7 +413,7 @@ class PLCControler(object):
             elif words[0] in ['T', 'A']:
                 return ["%s.%s" % (instance, words[2])
                         for instance in self.SearchPouInstances(
-                            ComputePouName(words[1]), debug)]
+                        ComputePouName(words[1]), debug)]
         return []
 
     def GetPouInstanceTagName(self, instance_path, debug=False):
@@ -488,7 +501,8 @@ class PLCControler(object):
             else:
                 next_row = row
                 next_col = col + len(chunk)
-            if (next_row > from_location[0] or next_row == from_location[0] and next_col >= from_location[1]) and len(chunk_infos) > 0:
+            if (next_row > from_location[0] or next_row == from_location[0] and next_col >= from_location[1]) and len(
+                    chunk_infos) > 0:
                 infos.append((chunk_infos, (row, col)))
             if next_row == to_location[0] and next_col > to_location[1] or next_row > to_location[0]:
                 return infos
@@ -592,7 +606,7 @@ class PLCControler(object):
             # function blocks cannot be pasted as functions,
             # programs cannot be pasted as functions or function blocks
             if orig_type == 'functionBlock' and pou_type == 'function' or \
-               orig_type == 'program' and pou_type in ['function', 'functionBlock']:
+                    orig_type == 'program' and pou_type in ['function', 'functionBlock']:
                 msg = _('''{a1} "{a2}" can't be pasted as a {a3}.''').format(a1=orig_type, a2=name, a3=pou_type)
                 return msg
 
@@ -1183,7 +1197,8 @@ class PLCControler(object):
         for _sectioname, blocktype in self.TotalTypesDict.get(typename, []):
             if inputs is not None and inputs != "undefined":
                 block_inputs = tuple([var_type for _name, var_type, _modifier in blocktype["inputs"]])
-                if reduce(lambda x, y: x and y, map(lambda x: x[0] == "ANY" or self.IsOfType(*x), zip(inputs, block_inputs)), True):
+                if reduce(lambda x, y: x and y,
+                          map(lambda x: x[0] == "ANY" or self.IsOfType(*x), zip(inputs, block_inputs)), True):
                     return blocktype
             else:
                 if result_blocktype:
@@ -1434,7 +1449,7 @@ class PLCControler(object):
         return False
 
     def IsNumType(self, typename, debug=False):
-        return self.IsOfType(typename, "ANY_NUM", debug) or\
+        return self.IsOfType(typename, "ANY_NUM", debug) or \
                self.IsOfType(typename, "ANY_BIT", debug)
 
     def GetDataTypeRange(self, typename, debug=False):
@@ -1477,8 +1492,8 @@ class PLCControler(object):
                 if basetype_content_type == "enum":
                     return [value.getname()
                             for value in basetype_content.xpath(
-                                "ppx:values/ppx:value",
-                                namespaces=PLCOpenParser.NSMAP)]
+                            "ppx:values/ppx:value",
+                            namespaces=PLCOpenParser.NSMAP)]
                 elif basetype_content_type == "derived":
                     return self.GetEnumeratedDataValues(basetype_content.getname(), debug)
         else:
@@ -1861,8 +1876,8 @@ class PLCControler(object):
                     for instance in element.getinstances():
                         if isinstance(
                                 instance,
-                                (PLCOpenParser.GetElementClass("step",         "sfcObjects"),
-                                 PLCOpenParser.GetElementClass("connector",    "commonObjects"),
+                                (PLCOpenParser.GetElementClass("step", "sfcObjects"),
+                                 PLCOpenParser.GetElementClass("connector", "commonObjects"),
                                  PLCOpenParser.GetElementClass("continuation", "commonObjects"))):
                             names[instance.getname().upper()] = True
             elif words[0] == 'R':
@@ -2506,7 +2521,7 @@ class PLCControler(object):
                  SELECTION_CONVERGENCE: "selectionConvergence",
                  SIMULTANEOUS_DIVERGENCE: "simultaneousDivergence",
                  SIMULTANEOUS_CONVERGENCE: "simultaneousConvergence"}.get(
-                     divergence_type), "sfcObjects")
+                    divergence_type), "sfcObjects")
             divergence.setlocalId(id)
             element.addinstance(divergence)
 
@@ -2657,17 +2672,17 @@ class PLCControler(object):
                 new_task.setname(task["Name"])
                 if task["Triggering"] == "Interrupt":
                     new_task.setsingle(task["Single"])
-#                result = duration_model.match(task["Interval"]).groups()
-#                if reduce(lambda x, y: x or y != None, result):
-#                    values = []
-#                    for value in result[:-1]:
-#                        if value != None:
-#                            values.append(int(value))
-#                        else:
-#                            values.append(0)
-#                    if result[-1] is not None:
-#                        values.append(int(float(result[-1]) * 1000))
-#                    new_task.setinterval(datetime.time(*values))
+                #                result = duration_model.match(task["Interval"]).groups()
+                #                if reduce(lambda x, y: x or y != None, result):
+                #                    values = []
+                #                    for value in result[:-1]:
+                #                        if value != None:
+                #                            values.append(int(value))
+                #                        else:
+                #                            values.append(0)
+                #                    if result[-1] is not None:
+                #                        values.append(int(float(result[-1]) * 1000))
+                #                    new_task.setinterval(datetime.time(*values))
                 if task["Triggering"] == "Cyclic":
                     new_task.setinterval(task["Interval"])
                 new_task.setpriority(int(task["Priority"]))

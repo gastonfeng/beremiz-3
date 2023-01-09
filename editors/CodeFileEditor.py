@@ -32,19 +32,18 @@ import wx
 import wx.grid
 import wx.stc as stc
 import wx.lib.buttons
-from six.moves import range
 
-
+from controls.CustomGrid import CustomGrid
+from controls.CustomTable import CustomTable
 from plcopen.plcopen import TestTextElement
 from plcopen.structures import TestIdentifier, IEC_KEYWORDS, DefaultType
-from controls import CustomGrid, CustomTable
 from controls.CustomStyledTextCtrl import CustomStyledTextCtrl, faces, GetCursorPos, NAVIGATION_KEYS
 from editors.ConfTreeNodeEditor import ConfTreeNodeEditor
 from util.BitmapLibrary import GetBitmap
 from util.TranslationCatalogs import NoTranslate
 from graphics.GraphicCommons import ERROR_HIGHLIGHT, SEARCH_RESULT_HIGHLIGHT, REFRESH_HIGHLIGHT_PERIOD
 
-
+_=wx.GetTranslation
 [STC_CODE_ERROR, STC_CODE_SEARCH_RESULT,
  STC_CODE_SECTION] = range(15, 18)
 
