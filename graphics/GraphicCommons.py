@@ -28,11 +28,11 @@ from __future__ import division
 
 from math import sqrt
 
+import wx
 from six import string_types
 
-import wx
-from graphics.ToolTipProducer import ToolTipProducer
 from graphics.DebugDataConsumer import DebugDataConsumer
+from graphics.ToolTipProducer import ToolTipProducer
 
 # -------------------------------------------------------------------------------
 #                               Common constants
@@ -299,7 +299,11 @@ class Graphic_Element(ToolTipProducer):
             distances.append((sqrt((self.Pos.x + connector_pos.x - position.x) ** 2 +
                                    (self.Pos.y + connector_pos.y - position.y) ** 2),
                               connector))
-        distances.sort()
+
+        def sc(d):
+            return d[0]
+
+        distances = sorted(distances, key=sc)
         if len(distances) > 0:
             return distances[0][1]
         return None

@@ -25,14 +25,17 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
+import getopt
 import os
 import sys
-import getopt
 
 import wx
 from wx.lib.agw.advancedsplash import AdvancedSplash, AS_NOTIMEOUT, AS_CENTER_ON_SCREEN
 
 import util.paths as paths
+
+_ = wx.GetTranslation
 
 
 class BeremizIDELauncher(object):
@@ -127,6 +130,7 @@ class BeremizIDELauncher(object):
                 if not _self.Painted:  # trigger app start only once
                     _self.Painted = True
                     wx.CallAfter(self.AppStart)
+
         bmp = wx.Image(self.splashPath).ConvertToBitmap()
         self.splash = Splash(None,
                              bitmap=bmp,
