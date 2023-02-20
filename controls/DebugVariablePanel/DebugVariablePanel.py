@@ -58,7 +58,7 @@ SCROLLBAR_UNIT = 10
 
 def compute_mask(x, y):
     return [(xp if xp == yp else "*")
-            for xp, yp in zip(x, y)]
+            for xp, yp in list(zip(x, y))]
 
 
 def NextTick(variables):
@@ -583,8 +583,7 @@ class DebugVariablePanel(wx.Panel, DebugViewer):
         DebugViewer.SubscribeAllDataConsumers(self)
 
         if self.DataProducer is not None:
-            if self.DataProducer is not None:
-                self.SetTickTime(self.DataProducer.GetTicktime())
+            self.SetTickTime(self.DataProducer.GetTicktime())
 
         self.ResetCursorTick()
 
@@ -861,7 +860,7 @@ class DebugVariablePanel(wx.Panel, DebugViewer):
                 target_panel = None
 
             if target_panel is not None:
-                target_panel.AddItem(source_item)
+                target_panel.Add(source_item)
                 target_panel.GraphType = merge_type
                 size = target_panel.GetSize()
                 if merge_type == GRAPH_ORTHOGONAL:

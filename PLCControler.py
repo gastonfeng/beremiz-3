@@ -469,7 +469,7 @@ class PLCControler(object):
                 self.NextCompiledProject = self.Copy(self.Project)
                 program_text = "".join([item[0] for item in self.ProgramChunks])
                 if filepath is not None:
-                    programfile = open(filepath, "w")
+                    programfile = open(filepath, "wb")
                     programfile.write(program_text.encode("utf-8"))
                     programfile.close()
                     self.ProgramFilePath = filepath

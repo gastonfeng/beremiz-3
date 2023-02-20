@@ -1,3 +1,6 @@
 /.idea/
 /poetry.lock
 /venv/
+__pycache__/
+exemples/first_steps/build/generated_plc.st
+exemples/first_steps/build/plc.st

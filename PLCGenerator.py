@@ -995,9 +995,14 @@ class PouProgramGenerator(object):
                     otherInstances["connectors"].append(instance)
                 elif isinstance(instance, CoilClass):
                     otherInstances["outVariables&coils"].append(instance)
-            orderedInstances.sort()
-            otherInstances["outVariables&coils"].sort(SortInstances)
-            otherInstances["blocks"].sort(SortInstances)
+
+            def sc(d):
+                return d[0]
+
+            orderedInstances = sorted(orderedInstances, key=sc)
+            otherInstances["outVariables&coils"] = sorted(otherInstances["outVariables&coils"],
+                                                          key=lambda xx: (xx.gety(), xx.getx()))
+            otherInstances["blocks"].sort(key=lambda xx: (xx.gety(), xx.getx()))
             instances = [instance for (executionOrderId, instance) in orderedInstances]
             instances.extend(otherInstances["outVariables&coils"] + otherInstances["blocks"] + otherInstances["connectors"])
             for instance in instances:

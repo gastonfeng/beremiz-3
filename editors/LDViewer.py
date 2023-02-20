@@ -299,7 +299,7 @@ class LD_Viewer(Viewer):
             return Viewer.SearchElements(self, bbox)
 
         elements = []
-        for element in self.Blocks.values() + self.Comments.values():
+        for element in list(self.Blocks.values()) + list(self.Comments.values()):
             if element.IsInSelection(bbox):
                 elements.append(element)
         return elements

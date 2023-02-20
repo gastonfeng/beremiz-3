@@ -158,7 +158,7 @@ class Iec2CSettings(object):
             # Output files are listed to stdout, errors to stderr
             _status, result, _err_result = ProcessLogger(self.controler.logger, buildcmd,
                                                          no_stdout=True,
-                                                         no_stderr=True).spin()
+                                                         no_stderr=True, output_encoding='utf-8').spin()
         except Exception:
             self.controler.logger.write_error(_("Couldn't launch IEC compiler to determine compatible options.\n"))
             return buildopt
@@ -725,7 +725,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
             # IEC2C compiler generate a list of located variables :
             # LOCATED_VARIABLES.h
             location_file = open(
-                os.path.join(self._getBuildPath(), "LOCATED_VARIABLES.h"))
+                os.path.join(self._getBuildPath(), "LOCATED_VARIABLES.h"), encoding='utf-8')
             # each line of LOCATED_VARIABLES.h declares a located variable
             lines = [line.strip() for line in location_file.readlines()]
             # This regular expression parses the lines genereated by IEC2C
@@ -807,8 +807,8 @@ class ProjectController(ConfigTreeNode, PLCControler):
             plc_file.write(POUsIECCodeContent)
 
         hasher = hashlib.md5()
-        hasher.update(IECCodeContent)
-        hasher.update(POUsIECCodeContent)
+        hasher.update(IECCodeContent.encode())
+        hasher.update(POUsIECCodeContent.encode())
         self.IECcodeDigest = hasher.hexdigest()
 
         return True
