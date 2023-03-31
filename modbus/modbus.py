@@ -119,7 +119,7 @@ class _RequestPlug(object):
         # 'Coil', 'Holding Register', 'Input Discrete' or 'Input Register'
         dataname = mb_utils.modbus_function_dict[function][7]
         # start off with a boolean entry
-        # This is a flag used to allow the user program to control when to 
+        # This is a flag used to allow the user program to control when to
         # execute the Modbus request.
         # NOTE: If the Modbus request has a 'current_location' of
         #          %QX1.2.3
@@ -135,30 +135,30 @@ class _RequestPlug(object):
         entries.append({
             "name": "Execute request flag",
             "type": LOCATION_VAR_MEMORY,
-            "size": 1,           # BOOL flag
+            "size": 1,  # BOOL flag
             "IEC_type": "BOOL",  # BOOL flag
             "var_name": "var_name",
             "location": "X" + ".".join([str(i) for i in current_location]) + ".0.0",
             "description": "Modbus request execution control flag",
-            "children": []})        
+            "children": []})
         entries.append({
             "name": "Modbus Request Status flag",
             "type": LOCATION_VAR_MEMORY,
-            "size": 8,           # BYTE flag
+            "size": 8,  # BYTE flag
             "IEC_type": "BYTE",  # BYTE flag
             "var_name": "var_name",
             "location": "B" + ".".join([str(i) for i in current_location]) + ".0.1",
             "description": "Modbus request status flag (0 -> OK, 1 -> Network error, 2 -> Received invalid frame, 3 -> Timeout, 4 -> Received error frame)",
-            "children": []})        
+            "children": []})
         entries.append({
             "name": "Modbus Error Code",
             "type": LOCATION_VAR_MEMORY,
-            "size": 8,           # BYTE flag
+            "size": 8,  # BYTE flag
             "IEC_type": "BYTE",  # BYTE flag
             "var_name": "var_name",
             "location": "B" + ".".join([str(i) for i in current_location]) + ".0.2",
             "description": "Modbus Error Code received in Modbus error frame",
-            "children": []})        
+            "children": []})
         for offset in range(address, address + count):
             entries.append({
                 "name": dataname + " " + str(offset),
@@ -243,9 +243,9 @@ class _MemoryAreaPlug(object):
             if element["name"] == "MemoryArea":
                 for child in element["children"]:
                     if child["name"] == "MemoryAreaType":
-                        list = modbus_memtype_dict.keys()
-                        list.sort()
-                        child["type"] = list
+                        _list = list(modbus_memtype_dict.keys())
+                        _list.sort()
+                        child["type"] = _list
         return infos
 
     def GetVariableLocationTree(self):
@@ -338,18 +338,18 @@ class _ModbusTCPclientPlug(object):
         # The ModbusTCPclient attribute is added dynamically by ConfigTreeNode._AddParamsMembers()
         # It will be an XML parser object created by
         # GenerateParserFromXSDstring(self.XSD).CreateRoot()
-        
+
         # Set the default value for the "Configuration_Name" parameter
-        # The default value will need to be different for each instance of the 
+        # The default value will need to be different for each instance of the
         # _ModbusTCPclientPlug class, so we cannot hardcode the default value in the XSD above
-        # This value will be used by the web interface 
+        # This value will be used by the web interface
         #   (i.e. the extension to the web server used to configure the Modbus parameters).
         #   (The web server is run/activated/started by Beremiz_service.py)
         #   (The web server code is found in runtime/NevowServer.py)
         #   (The Modbus extension to the web server is found in runtime/Modbus_config.py)
         loc_str = ".".join(map(str, self.GetCurrentLocation()))
         self.ModbusTCPclient.setConfiguration_Name("Modbus TCP Client " + loc_str)
-        
+
     # Return the number of (modbus library) nodes this specific TCP client will need
     #   return type: (tcp nodes, rtu nodes, ascii nodes)
     def GetNodeCount(self):
@@ -417,18 +417,18 @@ class _ModbusTCPserverPlug(object):
         # The ModbusServerNode attribute is added dynamically by ConfigTreeNode._AddParamsMembers()
         # It will be an XML parser object created by
         # GenerateParserFromXSDstring(self.XSD).CreateRoot()
-        
+
         # Set the default value for the "Configuration_Name" parameter
-        # The default value will need to be different for each instance of the 
+        # The default value will need to be different for each instance of the
         # _ModbusTCPclientPlug class, so we cannot hardcode the default value in the XSD above
-        # This value will be used by the web interface 
+        # This value will be used by the web interface
         #   (i.e. the extension to the web server used to configure the Modbus parameters).
         #   (The web server is run/activated/started by Beremiz_service.py)
         #   (The web server code is found in runtime/NevowServer.py)
         #   (The Modbus extension to the web server is found in runtime/Modbus_config.py)
         loc_str = ".".join(map(str, self.GetCurrentLocation()))
         self.ModbusServerNode.setConfiguration_Name("Modbus TCP Server " + loc_str)
-        
+
     # Return the number of (modbus library) nodes this specific TCP server will need
     #   return type: (tcp nodes, rtu nodes, ascii nodes)
     def GetNodeCount(self):
@@ -480,39 +480,39 @@ class _ModbusTCPserverPlug(object):
         entries.append({
             "name": "Modbus Read Request Counter",
             "type": LOCATION_VAR_MEMORY,
-            "size": 32,           # UDINT flag
+            "size": 32,  # UDINT flag
             "IEC_type": "UDINT",  # UDINT flag
             "var_name": "var_name",
             "location": "D" + ".".join([str(i) for i in current_location]) + ".0",
             "description": "Modbus read request counter",
-            "children": []})        
+            "children": []})
         entries.append({
             "name": "Modbus Write Request Counter",
             "type": LOCATION_VAR_MEMORY,
-            "size": 32,           # UDINT flag
+            "size": 32,  # UDINT flag
             "IEC_type": "UDINT",  # UDINT flag
             "var_name": "var_name",
             "location": "D" + ".".join([str(i) for i in current_location]) + ".1",
             "description": "Modbus write request counter",
-            "children": []})        
+            "children": []})
         entries.append({
             "name": "Modbus Read Request Flag",
             "type": LOCATION_VAR_MEMORY,
-            "size": 1,            # BOOL flag
-            "IEC_type": "BOOL",   # BOOL flag
+            "size": 1,  # BOOL flag
+            "IEC_type": "BOOL",  # BOOL flag
             "var_name": "var_name",
             "location": "X" + ".".join([str(i) for i in current_location]) + ".2",
             "description": "Modbus read request flag",
-            "children": []})        
+            "children": []})
         entries.append({
             "name": "Modbus write Request Flag",
             "type": LOCATION_VAR_MEMORY,
-            "size": 1,            # BOOL flag
-            "IEC_type": "BOOL",   # BOOL flag
+            "size": 1,  # BOOL flag
+            "IEC_type": "BOOL",  # BOOL flag
             "var_name": "var_name",
             "location": "X" + ".".join([str(i) for i in current_location]) + ".3",
             "description": "Modbus write request flag",
-            "children": []})        
+            "children": []})
         # recursively call all the Memory Areas under this Modbus server/save
         # i.e., all the children objects which will be of class _MemoryAreaPlug
         for child in self.IECSortedChildren():
@@ -583,18 +583,18 @@ class _ModbusRTUclientPlug(object):
         # The ModbusRTUclient attribute is added dynamically by ConfigTreeNode._AddParamsMembers()
         # It will be an XML parser object created by
         # GenerateParserFromXSDstring(self.XSD).CreateRoot()
-        
+
         # Set the default value for the "Configuration_Name" parameter
-        # The default value will need to be different for each instance of the 
+        # The default value will need to be different for each instance of the
         # _ModbusTCPclientPlug class, so we cannot hardcode the default value in the XSD above
-        # This value will be used by the web interface 
+        # This value will be used by the web interface
         #   (i.e. the extension to the web server used to configure the Modbus parameters).
         #   (The web server is run/activated/started by Beremiz_service.py)
         #   (The web server code is found in runtime/NevowServer.py)
         #   (The Modbus extension to the web server is found in runtime/Modbus_config.py)
         loc_str = ".".join(map(str, self.GetCurrentLocation()))
         self.ModbusRTUclient.setConfiguration_Name("Modbus RTU Client " + loc_str)
-        
+
     def GetParamsAttributes(self, path=None):
         infos = ConfigTreeNode.GetParamsAttributes(self, path=path)
         for element in infos:
@@ -674,18 +674,18 @@ class _ModbusRTUslavePlug(object):
         # The ModbusRTUslave attribute is added dynamically by ConfigTreeNode._AddParamsMembers()
         # It will be an XML parser object created by
         # GenerateParserFromXSDstring(self.XSD).CreateRoot()
-        
+
         # Set the default value for the "Configuration_Name" parameter
-        # The default value will need to be different for each instance of the 
+        # The default value will need to be different for each instance of the
         # _ModbusTCPclientPlug class, so we cannot hardcode the default value in the XSD above
-        # This value will be used by the web interface 
+        # This value will be used by the web interface
         #   (i.e. the extension to the web server used to configure the Modbus parameters).
         #   (The web server is run/activated/started by Beremiz_service.py)
         #   (The web server code is found in runtime/NevowServer.py)
         #   (The Modbus extension to the web server is found in runtime/Modbus_config.py)
         loc_str = ".".join(map(str, self.GetCurrentLocation()))
         self.ModbusRTUslave.setConfiguration_Name("Modbus RTU Slave " + loc_str)
-        
+
     def GetParamsAttributes(self, path=None):
         infos = ConfigTreeNode.GetParamsAttributes(self, path=path)
         for element in infos:
@@ -740,39 +740,39 @@ class _ModbusRTUslavePlug(object):
         entries.append({
             "name": "Modbus Read Request Counter",
             "type": LOCATION_VAR_MEMORY,
-            "size": 32,           # UDINT flag
+            "size": 32,  # UDINT flag
             "IEC_type": "UDINT",  # UDINT flag
             "var_name": "var_name",
             "location": "D" + ".".join([str(i) for i in current_location]) + ".0",
             "description": "Modbus read request counter",
-            "children": []})        
+            "children": []})
         entries.append({
             "name": "Modbus Write Request Counter",
             "type": LOCATION_VAR_MEMORY,
-            "size": 32,           # UDINT flag
+            "size": 32,  # UDINT flag
             "IEC_type": "UDINT",  # UDINT flag
             "var_name": "var_name",
             "location": "D" + ".".join([str(i) for i in current_location]) + ".1",
             "description": "Modbus write request counter",
-            "children": []})        
+            "children": []})
         entries.append({
             "name": "Modbus Read Request Flag",
             "type": LOCATION_VAR_MEMORY,
-            "size": 1,            # BOOL flag
-            "IEC_type": "BOOL",   # BOOL flag
+            "size": 1,  # BOOL flag
+            "IEC_type": "BOOL",  # BOOL flag
             "var_name": "var_name",
             "location": "X" + ".".join([str(i) for i in current_location]) + ".2",
             "description": "Modbus read request flag",
-            "children": []})        
+            "children": []})
         entries.append({
             "name": "Modbus write Request Flag",
             "type": LOCATION_VAR_MEMORY,
-            "size": 1,            # BOOL flag
-            "IEC_type": "BOOL",   # BOOL flag
+            "size": 1,  # BOOL flag
+            "IEC_type": "BOOL",  # BOOL flag
             "var_name": "var_name",
             "location": "X" + ".".join([str(i) for i in current_location]) + ".3",
             "description": "Modbus write request flag",
-            "children": []})        
+            "children": []})
         # recursively call all the Memory Areas under this Modbus server/save
         # i.e., all the children objects which will be of class _MemoryAreaPlug
         for child in self.IECSortedChildren():
@@ -895,23 +895,24 @@ class RootClass(object):
             if CTNInstance.CTNType == "modbus":
                 # ask each modbus plugin instance how many nodes it needs, and add them all up.
                 total_node_count = tuple(x1 + x2 for x1, x2 in zip(total_node_count, CTNInstance.GetNodeCount()))
-                IPServer_port_numbers.   extend(CTNInstance.GetIPServerPortNumbers())
-                Node_Configuration_Names.extend(CTNInstance.GetConfigNames        ())
+                IPServer_port_numbers.extend(CTNInstance.GetIPServerPortNumbers())
+                Node_Configuration_Names.extend(CTNInstance.GetConfigNames())
 
         # Search for use of duplicate Configuration_Names by Modbus nodes
         # Configuration Names are used by the web server running on the PLC
-        # (more precisely, run by Beremiz_service.py) to identify and allow 
-        # changing the Modbus parameters after the program has been downloaded 
+        # (more precisely, run by Beremiz_service.py) to identify and allow
+        # changing the Modbus parameters after the program has been downloaded
         # to the PLC (but before it is started)
         # With clashes in the configuration names, the Modbus nodes will not be
         # distinguasheble on the web interface!
         for i in range(0, len(Node_Configuration_Names) - 1):
             for j in range(i + 1, len(Node_Configuration_Names)):
                 if Node_Configuration_Names[i][1] == Node_Configuration_Names[j][1]:
-                    error_message = _("Error: Modbus plugin nodes %{a1}.x and %{a2}.x use the same Configuration_Name \"{a3}\".\n").format(
-                                        a1=_lt_to_str(Node_Configuration_Names[i][0]),
-                                        a2=_lt_to_str(Node_Configuration_Names[j][0]),
-                                        a3=Node_Configuration_Names[j][1])
+                    error_message = _(
+                        "Error: Modbus plugin nodes %{a1}.x and %{a2}.x use the same Configuration_Name \"{a3}\".\n").format(
+                        a1=_lt_to_str(Node_Configuration_Names[i][0]),
+                        a2=_lt_to_str(Node_Configuration_Names[j][0]),
+                        a3=Node_Configuration_Names[j][1])
                     self.FatalError(error_message)
 
         # Search for use of duplicate port numbers by Modbus/IP servers
@@ -925,9 +926,9 @@ class RootClass(object):
                        or (addr1 == "") or (addr1 == "*") or (addr1 == "#ANY#") # or one (or both) of the servers
                        or (addr2 == "") or (addr2 == "*") or (addr2 == "#ANY#") # use all available network interfaces
                    ):
-                    error_message = _("Error: Modbus plugin nodes %{a1}.x and %{a2}.x use same port number \"{a3}\" " + 
+                    error_message = _("Error: Modbus plugin nodes %{a1}.x and %{a2}.x use same port number \"{a3}\" " +
                                       "on the same (or overlapping) network interfaces \"{a4}\" and \"{a5}\".\n").format(
-                                        a1=_lt_to_str(loc1), a2=_lt_to_str(loc2), a3=port1, a4=addr1, a5=addr2)
+                        a1=_lt_to_str(loc1), a2=_lt_to_str(loc2), a3=port1, a4=addr1, a5=addr2)
                     self.FatalError(error_message)
 
         # Determine the current location in Beremiz's project configuration
@@ -972,7 +973,7 @@ class RootClass(object):
                 new_node = mb_utils.GetTCPServerNodePrinted(self, child)
                 if new_node is None:
                     return [], "", False
-                server_node_list.append(new_node)                
+                server_node_list.append(new_node)
                 #        We currently add 4 flags/counters to each Modbus server/slave
                 #
                 #        We add the Modbus read/write counter/flag to each Modbus slave/server
@@ -997,7 +998,7 @@ class RootClass(object):
                         if iecvar["LOC"][2] == 3:
                             loc_vars.append("u8 *" + str(iecvar["NAME"]) + " = &server_nodes[%d].mem_area.flag_write_req_flag;" % (server_id))
                             loc_vars_list.append(str(iecvar["NAME"]))
-                
+
                 for subchild in child.IECSortedChildren():
                     new_memarea = mb_utils.GetTCPServerMemAreaPrinted(self, subchild, nodeid)
                     if new_memarea is None:
@@ -1089,7 +1090,7 @@ class RootClass(object):
                     for iecvar in subchild.GetLocations():
                         # absloute address - start address
                         relative_addr = iecvar["LOC"][3] - int(mb_utils.GetCTVal(subchild, 3))
-                        # test if the located variable 
+                        # test if the located variable
                         #    (a) has relative address in request specified range
                         #  AND is NOT
                         #    (b) is a flag added by this modbus plugin.
@@ -1121,13 +1122,13 @@ class RootClass(object):
                                 #         2 -> reply received from server was an invalid frame
                                 #         3 -> server did not reply before timeout expired
                                 #         4 -> server returned a valid Modbus error frame
-                                #    -> will be reset (set to 0) once this MB transaction has completed sucesfully 
+                                #    -> will be reset (set to 0) once this MB transaction has completed sucesfully
                                 if iecvar["LOC"][4] == 1:
                                     loc_vars.append("u8 *" + str(iecvar["NAME"]) + " = &client_requests[%d].flag_tn_error_code;" % (client_requestid))
                                     loc_vars_list.append(str(iecvar["NAME"]))
                                 # Add if it is a "Modbus Error code" (mapped onto %QWa.b.c.0.2), so last number is a '2'
                                 #    -> if "Modbus Request Status flag" is 4, this flag will store the MB error code returned by the MB server in a MB error frame
-                                #    -> will be reset (set to 0) once this MB transaction has completed succesfully                                
+                                #    -> will be reset (set to 0) once this MB transaction has completed succesfully
                                 if iecvar["LOC"][4] == 2:
                                     loc_vars.append("u8 *" + str(iecvar["NAME"]) + " = &client_requests[%d].flag_mb_error_code;" % (client_requestid))
                                     loc_vars_list.append(str(iecvar["NAME"]))
@@ -1150,7 +1151,7 @@ class RootClass(object):
                     for iecvar in subchild.GetLocations():
                         # absloute address - start address
                         relative_addr = iecvar["LOC"][3] - int(mb_utils.GetCTVal(subchild, 3))
-                        # test if the located variable 
+                        # test if the located variable
                         #    (a) has relative address in request specified range
                         #  AND is NOT
                         #    (b) is a flag added by this modbus plugin.
@@ -1183,13 +1184,13 @@ class RootClass(object):
                                 #         2 -> reply received from server was an invalid frame
                                 #         3 -> server did not reply before timeout expired
                                 #         4 -> server returned a valid Modbus error frame
-                                #    -> will be reset (set to 0) once this MB transaction has completed sucesfully 
+                                #    -> will be reset (set to 0) once this MB transaction has completed sucesfully
                                 if iecvar["LOC"][4] == 1:
                                     loc_vars.append("u8 *" + str(iecvar["NAME"]) + " = &client_requests[%d].flag_tn_error_code;" % (client_requestid))
                                     loc_vars_list.append(str(iecvar["NAME"]))
                                 # Add if it is a "Modbus Error code" (mapped onto %QWa.b.c.0.2), so last number is a '2'
                                 #    -> if "Modbus Request Status flag" is 4, this flag will store the MB error code returned by the MB server in a MB error frame
-                                #    -> will be reset (set to 0) once this MB transaction has completed succesfully                                
+                                #    -> will be reset (set to 0) once this MB transaction has completed succesfully
                                 if iecvar["LOC"][4] == 2:
                                     loc_vars.append("u8 *" + str(iecvar["NAME"]) + " = &client_requests[%d].flag_mb_error_code;" % (client_requestid))
                                     loc_vars_list.append(str(iecvar["NAME"]))

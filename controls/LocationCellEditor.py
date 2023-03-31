@@ -24,6 +24,7 @@
 
 
 from __future__ import absolute_import
+
 import wx
 
 from dialogs.BrowseLocationsDialog import BrowseLocationsDialog
@@ -205,9 +206,9 @@ class LocationCellEditor(wx.grid.GridCellEditor):
         pass
 
     def SetSize(self, rect):
-        self.CellControl.SetDimensions(rect.x + 1, rect.y,
-                                       rect.width, rect.height,
-                                       wx.SIZE_ALLOW_MINUS_ONE)
+        self.CellControl.SetSize(rect.x + 1, rect.y,
+                                 rect.width, rect.height,
+                                 wx.SIZE_ALLOW_MINUS_ONE)
 
     def Clone(self):
         return LocationCellEditor(self.Table, self.Controller)

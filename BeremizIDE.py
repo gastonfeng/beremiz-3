@@ -29,6 +29,7 @@ from __future__ import print_function
 
 import os
 import pickle
+import signal
 import time
 from threading import Lock, Timer, currentThread
 from time import time as gettime
@@ -364,7 +365,7 @@ class Beremiz(IDEFrame, LocalRuntimeMixin):
                             wx.CallAfter(obj.RefreshStatusToolBar)
                         else:
                             # Postpone call if one of method already running
-                            # can happen because of long method using log, 
+                            # can happen because of long method using log,
                             # itself calling wx.Yield
                             wx.CallLater(50, OnMethod, evt)
                 return OnMethod
